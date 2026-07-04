@@ -39,9 +39,12 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 - [x] Criba final aprobada por Miguel: fuera vwap_reversion (sin edge bruto); 7 vivas, stat_arb y session_seasonality en observación hasta post-meta-modelo
 
 ## Fase 3 — Detector de régimen (HMM)
-- [ ] Features de régimen
-- [ ] HMM entrenado + selección de nº de estados
-- [ ] Vista de regímenes coloreados sobre el precio
+- [x] Features de régimen (ret_1d + log vol_20d, estandarizadas solo con el train)
+- [x] HMM gaussiano 3 estados, walk-forward (re-fit anual), probabilidades FILTRADAS (forward propio)
+- [x] Estados ordenados por vol (0 calma / 1 transición / 2 turbulencia), estables entre re-fits
+- [x] Vista "Régimen": precio coloreado, probabilidades, y Sharpe por régimen de cada estrategia
+- [x] Evidencia: trend Sharpe ~1.0 en calma y negativo en turbulencia; mean_rev y vol_breakout al revés (+1.2 en turbulencia)
+- [ ] Validado por Miguel
 
 ## Fase 4 — Meta-modelo (XGBoost)
 - [ ] Triple barrier labeling (implementación propia, testeada)

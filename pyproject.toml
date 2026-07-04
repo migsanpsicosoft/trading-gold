@@ -12,6 +12,9 @@ dependencies = [
     "pandas>=2.2,<3",
     "numpy>=1.26,<3",
     "yfinance>=0.2.50,<1",
+    # Fase 3 — detector de régimen
+    "hmmlearn>=0.3.2,<0.4",
+    "scipy>=1.11,<2",
     "pydantic-settings>=2.6,<3",
     "structlog>=24.4,<26",
 ]
