@@ -19,7 +19,7 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 - [x] Auto-actualización: al arrancar el backend si los datos tienen >24h + botón manual
 - [x] Página "Data explorer" (velas TradingView + volumen + estado de datasets)
 - [x] Intradía 15m XAU: Dukascopy bid/ask (spread real por barra), backfill por trozos
-- [ ] Features técnicas base
+- [x] Features técnicas base (17, sin leakage, con tests; página "Features")
 - [ ] Validado por Miguel
 
 ## Fase 2 — Estrategias base

@@ -5,15 +5,18 @@ hilos). Para barras diarias e intradía el coste es despreciable.
 """
 
 from datetime import UTC, datetime, timedelta
+from functools import lru_cache
 
 import pandas as pd
 from fastapi import APIRouter, HTTPException
 
 from gold_bot.data.db import connect
-from gold_bot.data.download import SYMBOLS, data_summary, update_all
+from gold_bot.data.download import SYMBOLS, data_summary, load_bars, update_all
+from gold_bot.data.features import FEATURE_DESCRIPTIONS, compute_features
 from gold_bot.data.intraday import (
     INTRADAY_SYMBOLS,
     intraday_summary,
+    load_intraday_mid,
     resample_bars,
     update_intraday,
 )
@@ -101,6 +104,69 @@ def _intraday_bars(conn, symbol: str, start: str | None, resample_to: str | None
             "spread": None if pd.isna(r.spread) else round(r.spread, 3),
         }
         for ts, r in df.iterrows()
+    ]
+
+
+# -------------------------------------------------------------- features
+def _data_version(conn) -> tuple:
+    """Estado exacto de los datos: los content hashes de dataset_meta.
+
+    Sirve de clave de caché: si ningún hash cambió, las features
+    calculadas siguen siendo válidas y no se recalculan.
+    """
+    return tuple(conn.execute(
+        "SELECT symbol, content_hash FROM dataset_meta ORDER BY symbol"
+    ).fetchall())
+
+
+@lru_cache(maxsize=2)
+def _features_for_version(version: tuple) -> pd.DataFrame:
+    conn = connect()
+    try:
+        daily = {sym: load_bars(conn, sym) for sym in SYMBOLS}
+        intraday = load_intraday_mid(conn, "XAU")
+        # Se calcula SIEMPRE sobre el histórico completo: las ventanas
+        # móviles necesitan calentamiento; se filtra por fecha después.
+        return compute_features(daily, intraday)
+    finally:
+        conn.close()
+
+
+def _features_df() -> pd.DataFrame:
+    conn = connect()
+    try:
+        return _features_for_version(_data_version(conn))
+    finally:
+        conn.close()
+
+
+@router.get("/features")
+def features_meta() -> dict:
+    """Catálogo de features + snapshot de los últimos valores."""
+    f = _features_df()
+    latest = f.iloc[-1]
+    return {
+        "names": list(f.columns),
+        "descriptions": FEATURE_DESCRIPTIONS,
+        "latest_date": f.index[-1].date().isoformat(),
+        "latest": {
+            k: (None if pd.isna(v) else round(float(v), 6)) for k, v in latest.items()
+        },
+    }
+
+
+@router.get("/features/{name}")
+def feature_series(name: str, start: str | None = None) -> list[dict]:
+    """Serie temporal de una feature para el gráfico."""
+    f = _features_df()
+    if name not in f.columns:
+        raise HTTPException(status_code=404, detail=f"Feature desconocida: {name}")
+    s = f[name].dropna()
+    if start:
+        s = s[s.index >= start]
+    return [
+        {"time": _epoch(ts.date().isoformat()), "value": round(float(v), 6)}
+        for ts, v in s.items()
     ]
 
 

@@ -242,6 +242,28 @@ def _touch_meta_intraday(conn: sqlite3.Connection, key: str, content_hash: str) 
     conn.commit()
 
 
+def load_intraday_mid(conn: sqlite3.Connection, symbol: str = "XAU",
+                      start: str | None = None) -> pd.DataFrame:
+    """Barras 15m como precio MID ((bid+ask)/2) + spread, indexadas por ts.
+
+    El mid es el precio 'justo' para estadísticas: usar solo bid (o solo
+    ask) sesga los retornos con los vaivenes del spread.
+    """
+    query = (
+        "SELECT ts, (bid_close + ask_close) / 2 AS mid, "
+        "ask_close - bid_close AS spread "
+        "FROM intraday_bars WHERE symbol = ? "
+        "AND bid_close IS NOT NULL AND ask_close IS NOT NULL"
+    )
+    params: list = [symbol]
+    if start:
+        query += " AND ts >= ?"
+        params.append(start)
+    df = pd.read_sql(query + " ORDER BY ts", conn, params=params, index_col="ts")
+    df.index = pd.to_datetime(df.index)
+    return df
+
+
 def has_intraday_data(conn: sqlite3.Connection, symbol: str) -> bool:
     row = conn.execute(
         "SELECT 1 FROM intraday_bars WHERE symbol = ? LIMIT 1", (symbol,)

@@ -152,6 +152,30 @@ code {
   height: 480px;
 }
 
+/* Select */
+.select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.45rem 0.7rem;
+  border-radius: 6px;
+  font: inherit;
+  max-width: 420px;
+}
+
+/* Filas clicables (snapshot de features) */
+.row-click {
+  cursor: pointer;
+}
+
+.row-click:hover td {
+  background: rgba(88, 166, 255, 0.06);
+}
+
+.row-active td {
+  background: rgba(88, 166, 255, 0.12);
+}
+
 /* Tabla */
 .table {
   width: 100%;
