@@ -6,7 +6,9 @@ existen; la API y el backtest iteran sobre él.
 
 from gold_bot.strategies.base import Strategy, StrategyData
 from gold_bot.strategies.breakout import Breakout
+from gold_bot.strategies.macro import Macro
 from gold_bot.strategies.mean_reversion import MeanReversion
+from gold_bot.strategies.stat_arb import StatArbXauXag
 from gold_bot.strategies.trend_following import TrendFollowing
 
 STRATEGIES: dict[str, Strategy] = {
@@ -15,6 +17,8 @@ STRATEGIES: dict[str, Strategy] = {
         TrendFollowing(),
         Breakout(),
         MeanReversion(),
+        StatArbXauXag(),
+        Macro(),
     ]
 }
 

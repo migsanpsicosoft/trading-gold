@@ -74,16 +74,29 @@ def test_max_drawdown_known_case():
 
 
 # ------------------------------------------------------------- estrategias
+def make_universe(n: int = 400, start: str = "2022-01-01") -> dict:
+    """Universo sintético completo: XAU + XAG + DXY + TIP + US10Y."""
+    rng = np.random.default_rng(42)
+
+    def walk(base: float, drift: float, vol: float) -> list[float]:
+        return list(base * np.exp(np.cumsum(rng.normal(drift, vol, n))))
+
+    return {
+        "XAU": make_bars(walk(2000, 0.0005, 0.01), start),
+        "XAG": make_bars(walk(25, 0.0003, 0.015), start),
+        "DXY": make_bars(walk(100, 0.0, 0.004), start),
+        "TIP": make_bars(walk(110, 0.0001, 0.003), start),
+        "US10Y": make_bars(walk(40, 0.0, 0.01), start),
+    }
+
+
 @pytest.fixture
 def strategy_data():
     from gold_bot.data.features import compute_features
 
-    rng = np.random.default_rng(42)
-    n = 400
-    closes = list(2000 * np.exp(np.cumsum(rng.normal(0.0005, 0.01, n))))
-    bars = make_bars(closes, start="2022-01-01")
-    features = compute_features({"XAU": bars})
-    return StrategyData(bars=bars, features=features)
+    universe = make_universe()
+    features = compute_features(universe)
+    return StrategyData(bars=universe["XAU"], features=features)
 
 
 def test_all_strategies_emit_valid_positions(strategy_data):
@@ -127,9 +140,44 @@ def test_strategies_are_truncation_invariant(strategy_data):
     from gold_bot.data.features import compute_features
 
     cut = 300
-    bars_cut = strategy_data.bars.iloc[:cut]
-    data_cut = StrategyData(bars=bars_cut, features=compute_features({"XAU": bars_cut}))
+    universe_cut = {k: v.iloc[:cut] for k, v in make_universe().items()}
+    data_cut = StrategyData(
+        bars=universe_cut["XAU"], features=compute_features(universe_cut)
+    )
     for name, strat in STRATEGIES.items():
         full = strat.generate_positions(strategy_data).iloc[:cut]
         partial = strat.generate_positions(data_cut)
         pd.testing.assert_series_equal(full, partial, check_freq=False), name
+
+
+def test_stat_arb_shorts_expensive_gold():
+    from gold_bot.strategies.stat_arb import StatArbXauXag
+
+    n = 100
+    bars = make_bars([2000.0] * n)
+    # z sintético: neutro → estirón por encima de 2 → vuelta a 0
+    z = pd.Series(0.0, index=bars.index)
+    z.iloc[70:80] = 2.5
+    z.iloc[80:] = -0.1
+    features = pd.DataFrame({"xau_xag_z60": z}, index=bars.index)
+    pos = StatArbXauXag().generate_positions(StrategyData(bars=bars, features=features))
+    assert pos.iloc[75] == -1.0  # oro caro vs plata → corto
+    assert pos.iloc[85] == 0.0   # el ratio volvió a la norma → fuera
+
+
+def test_macro_votes():
+    from gold_bot.strategies.macro import Macro
+
+    bars = make_bars([2000.0] * 4)
+    features = pd.DataFrame(
+        {
+            # tipos reales bajando (TIP sube) + dólar débil → +1
+            # discrepancia → 0 · ambos en contra → -1 · NaN → NaN
+            "tip_ret_20d": [0.01, 0.01, -0.01, np.nan],
+            "dxy_ret_20d": [-0.01, 0.01, 0.01, 0.01],
+        },
+        index=bars.index,
+    )
+    pos = Macro().generate_positions(StrategyData(bars=bars, features=features))
+    assert list(pos.iloc[:3]) == [1.0, 0.0, -1.0]
+    assert pd.isna(pos.iloc[3])

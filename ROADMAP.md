@@ -31,8 +31,8 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 - [x] Breakout (Donchian 55/20 — OOS Sharpe 0.28; corr 0.80 con TF, vigilar redundancia)
 - [x] Mean reversion (Bollinger z 20d — OOS Sharpe -0.04; corr -0.6/-0.7 con las trend: diversifica)
 - [x] Matriz de correlación entre estrategias en el dashboard
-- [ ] Stat arb XAU/XAG
-- [ ] Macro (DXY, tipos reales)
+- [x] Stat arb XAU/XAG (z-score ratio 60d — OOS Sharpe -0.15; corr bajas: diversifica)
+- [x] Macro DXY + tipos reales (votos ±0.5 — OOS Sharpe 0.19)
 - [ ] Volatility breakout
 - [ ] VWAP intradía
 - [ ] Estrategia nº 8
