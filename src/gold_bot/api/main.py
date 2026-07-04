@@ -18,6 +18,7 @@ from fastapi import FastAPI, HTTPException
 
 from gold_bot import __version__
 from gold_bot.api.data import router as data_router
+from gold_bot.api.strategies import router as strategies_router
 from gold_bot.config import PROJECT_ROOT, settings
 from gold_bot.data.db import connect
 from gold_bot.data.download import is_stale, update_all
@@ -66,6 +67,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Gold Hybrid Bot API", version=__version__, lifespan=lifespan)
 app.include_router(data_router)
+app.include_router(strategies_router)
 
 # Módulos que el sistema tendrá cuando esté completo; el endpoint de
 # estado comprueba cuáles existen ya en el filesystem (nada inventado).

@@ -2,6 +2,7 @@ import { NavLink, Route, Routes } from 'react-router-dom'
 import Home from './pages/Home'
 import Data from './pages/Data'
 import Features from './pages/Features'
+import Strategies from './pages/Strategies'
 
 export default function App() {
   return (
@@ -13,12 +14,14 @@ export default function App() {
         </NavLink>
         <NavLink to="/data">Datos</NavLink>
         <NavLink to="/features">Features</NavLink>
-        {/* Próximas fases: Estrategias, Régimen, Meta-modelo, Riesgo */}
+        <NavLink to="/strategies">Estrategias</NavLink>
+        {/* Próximas fases: Régimen, Meta-modelo, Riesgo */}
       </nav>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/data" element={<Data />} />
         <Route path="/features" element={<Features />} />
+        <Route path="/strategies" element={<Strategies />} />
       </Routes>
     </>
   )

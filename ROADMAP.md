@@ -20,12 +20,14 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 - [x] Página "Data explorer" (velas TradingView + volumen + estado de datasets)
 - [x] Intradía 15m XAU: Dukascopy bid/ask (spread real por barra), backfill por trozos
 - [x] Features técnicas base (17, sin leakage, con tests; página "Features")
-- [ ] Validado por Miguel
+- [x] Validado por Miguel (2026-07-04)
 
 ## Fase 2 — Estrategias base
 - [ ] Definir la 8ª estrategia (solo hay 7 listadas)
-- [ ] Framework común de estrategia (interfaz señal → posición)
-- [ ] Trend following
+- [x] Framework común (posición objetivo [-1,1], ejecución t+1, registro STRATEGIES)
+- [x] Motor de criba: backtest vectorizado con spread real + slippage, split IS/OOS
+- [x] Página "Estrategias" (equity IS/OOS, posiciones, veredicto del filtro)
+- [x] Trend following (SMA 50/200 — OOS Sharpe 0.40, pendiente de mejora vía régimen/meta)
 - [ ] Breakout
 - [ ] Mean reversion
 - [ ] Stat arb XAU/XAG

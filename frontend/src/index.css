@@ -152,6 +152,14 @@ code {
   height: 480px;
 }
 
+.chart-small {
+  height: 180px;
+}
+
+.metric-highlight {
+  border-color: var(--gold);
+}
+
 /* Select */
 .select {
   background: var(--surface);
