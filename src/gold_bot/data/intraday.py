@@ -30,9 +30,20 @@ from gold_bot.utils.log import get_logger
 log = get_logger(__name__)
 
 # Símbolo interno → instrumento de Dukascopy
-INTRADAY_SYMBOLS: dict[str, str] = {"XAU": "xauusd"}
+INTRADAY_SYMBOLS: dict[str, str] = {
+    "XAU": "xauusd",
+    "XAG": "xagusd",
+    "EUR": "eurusd",
+    "WTI": "lightcmdusd",
+    "SPX": "usa500idxusd",
+}
 INTRADAY_TIMEFRAME = "m15"
-INTRADAY_HISTORY_START = "2015-01-01"  # ~11 años; ampliable re-lanzando con otra fecha
+# El oro conserva su histórico desde 2015; los activos añadidos en la
+# expansión multi-activo empiezan en 2019 (7 años intradía bastan y
+# el backfill cuesta la mitad)
+INTRADAY_HISTORY_START = "2015-01-01"
+INTRADAY_START: dict[str, str] = {"XAU": "2015-01-01"}
+DEFAULT_INTRADAY_START = "2019-01-01"
 INTRADAY_OVERLAP_DAYS = 3              # margen re-descargado en cada actualización
 CHUNK_RETRIES = 4                      # Dukascopy a veces rechaza bajo carga (transitorio)
 
@@ -134,7 +145,7 @@ def intraday_incremental_start(conn: sqlite3.Connection, symbol: str) -> str:
         "SELECT MAX(ts) FROM intraday_bars WHERE symbol = ?", (symbol,)
     ).fetchone()[0]
     if last is None:
-        return INTRADAY_HISTORY_START
+        return INTRADAY_START.get(symbol, DEFAULT_INTRADAY_START)
     last_day = date.fromisoformat(last[:10])
     return (last_day - timedelta(days=INTRADAY_OVERLAP_DAYS)).isoformat()
 

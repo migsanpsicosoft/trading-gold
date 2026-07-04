@@ -51,8 +51,8 @@ const RANGES: Record<'daily' | 'intraday', { label: string; days: number | null 
   ],
 }
 
-// Solo estos símbolos tienen datos intradía
-const INTRADAY_SYMBOLS = ['XAU']
+// Símbolos con datos intradía (expansión multi-activo)
+const INTRADAY_SYMBOLS = ['XAU', 'XAG', 'EUR', 'WTI', 'SPX']
 
 /** Gráfico de velas + volumen con lightweight-charts (TradingView). */
 function CandleChart({ bars, showTime }: { bars: Bar[]; showTime: boolean }) {

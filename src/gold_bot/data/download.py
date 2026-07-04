@@ -28,6 +28,10 @@ SYMBOLS: dict[str, tuple[str, str]] = {
     "DXY": ("DX-Y.NYB", "Índice dólar (ICE)"),
     "US10Y": ("^TNX", "Yield Treasury 10 años (en % x10)"),
     "TIP": ("TIP", "ETF de TIPS — proxy de tipos reales"),
+    # Expansión multi-activo (2026-07-04)
+    "EUR": ("EURUSD=X", "EUR/USD spot"),
+    "WTI": ("CL=F", "Petróleo WTI — futuros NYMEX front month"),
+    "SPX": ("ES=F", "S&P 500 — futuros E-mini front month"),
 }
 
 HISTORY_START = "2005-01-01"  # ~20 años: cubre varios regímenes de mercado

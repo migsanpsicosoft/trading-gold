@@ -111,6 +111,30 @@ def intraday_daily_stats(intraday: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+def compute_asset_features(bars: pd.DataFrame,
+                           intraday: pd.DataFrame | None = None) -> pd.DataFrame:
+    """Núcleo técnico genérico de un activo (expansión multi-activo).
+
+    Es el subconjunto asset-agnóstico de compute_features: retornos,
+    volatilidades, tendencia y microestructura del propio activo. Las
+    features cross-asset (ratio con plata, DXY, tipos...) son del libro
+    del oro y no entran aquí. Misma regla anti-leakage.
+    """
+    f = pd.DataFrame(index=bars.index)
+    ret1 = log_returns(bars["close"])
+    f["ret_1d"] = ret1
+    f["ret_5d"] = log_returns(bars["close"], 5)
+    f["ret_20d"] = log_returns(bars["close"], 20)
+    f["vol_20d"] = realized_vol(ret1)
+    f["atr_14_pct"] = atr(bars) / bars["close"]
+    f["rsi_14"] = rsi(bars["close"])
+    for w in (20, 50, 200):
+        f[f"sma_ratio_{w}"] = bars["close"] / bars["close"].rolling(w).mean() - 1
+    if intraday is not None and not intraday.empty:
+        f = f.join(intraday_daily_stats(intraday))
+    return f
+
+
 # ------------------------------------------------------------ ensamblado
 def _aligned_close(daily: dict[str, pd.DataFrame], symbol: str,
                    index: pd.Index) -> pd.Series | None:

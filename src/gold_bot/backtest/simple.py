@@ -57,13 +57,15 @@ def compute_metrics(net_returns: pd.Series) -> dict:
 
 
 def run_backtest(bars: pd.DataFrame, positions: pd.Series,
-                 spread_usd: pd.Series | None = None) -> BacktestResult:
+                 spread_usd: pd.Series | None = None,
+                 fallback_spread: float = FALLBACK_SPREAD) -> BacktestResult:
     """Backtest vectorizado de una serie de posiciones objetivo.
 
     bars: OHLCV diario (usa close).
     positions: posición objetivo en [-1, 1] calculada al cierre de cada día.
-    spread_usd: spread bid/ask medio diario en $ (de features.spread_mean);
-                donde falte se usa FALLBACK_SPREAD.
+    spread_usd: spread bid/ask medio diario en unidades de precio (de
+        features.spread_mean); donde falte se usa fallback_spread (por
+        activo — el default histórico es el del oro).
     """
     close = bars["close"]
     ret = np.log(close / close.shift(1))
@@ -77,8 +79,8 @@ def run_backtest(bars: pd.DataFrame, positions: pd.Series,
     # comprar cruza al ask (mid + spread/2), vender al bid → cada
     # transacción paga medio spread por unidad de posición cambiada
     if spread_usd is None:
-        spread_usd = pd.Series(FALLBACK_SPREAD, index=close.index)
-    spread_pct = (spread_usd.reindex(close.index).ffill().fillna(FALLBACK_SPREAD)) / close
+        spread_usd = pd.Series(fallback_spread, index=close.index)
+    spread_pct = (spread_usd.reindex(close.index).ffill().fillna(fallback_spread)) / close
     turnover = pos.diff().abs().fillna(pos.abs())
     cost = turnover * (spread_pct / 2 + SLIPPAGE_BPS / 10_000)
 

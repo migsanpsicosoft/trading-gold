@@ -23,6 +23,7 @@ from gold_bot.api.data import router as data_router
 from gold_bot.api.ensemble import router as ensemble_router
 from gold_bot.api.live import router as live_router
 from gold_bot.api.meta import router as meta_router
+from gold_bot.api.multi import router as multi_router
 from gold_bot.api.regime import router as regime_router
 from gold_bot.api.risk import router as risk_router
 from gold_bot.api.strategies import router as strategies_router
@@ -80,6 +81,7 @@ app.include_router(meta_router)
 app.include_router(risk_router)
 app.include_router(ensemble_router)
 app.include_router(live_router)
+app.include_router(multi_router)
 
 # Módulos que el sistema tendrá cuando esté completo; el endpoint de
 # estado comprueba cuáles existen ya en el filesystem (nada inventado).
