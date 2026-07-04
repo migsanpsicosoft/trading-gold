@@ -16,6 +16,7 @@ interface StrategyInfo {
   name: string
   description: string
   params: Record<string, number>
+  type?: string
   oos_sharpe: number | null
   passes_filter: boolean
 }
@@ -225,6 +226,7 @@ export default function Strategies() {
             >
               {s.passes_filter ? '✓ ' : ''}
               {s.name}
+              {s.type === 'intradia' ? ' ⏱' : ''}
             </button>
           ))}
         </div>
@@ -264,7 +266,7 @@ export default function Strategies() {
             <EquityChart equity={backtest.equity} oosStart={backtest.oos_start} />
           </div>
 
-          <h2>Posición efectiva (−1 corto · 0 fuera · +1 largo)</h2>
+          <h2>Posición efectiva (−1 corto · 0 fuera · +1 largo · intradía: media del día)</h2>
           <div className="card chart-card">
             <PositionsChart positions={backtest.positions} />
           </div>

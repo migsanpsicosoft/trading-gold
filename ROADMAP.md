@@ -33,8 +33,8 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 - [x] Matriz de correlación entre estrategias en el dashboard
 - [x] Stat arb XAU/XAG (z-score ratio 60d — OOS Sharpe -0.15; corr bajas: diversifica)
 - [x] Macro DXY + tipos reales (votos ±0.5 — OOS Sharpe 0.19)
-- [ ] Volatility breakout
-- [ ] VWAP intradía
+- [x] Volatility breakout intradía (opening range 15m — OOS bruto 0.47, neto -0.14: edge comido por costes; corr ~0 con todo)
+- [x] VWAP reversion intradía (OOS bruto -0.85, neto -1.54: sin edge — candidata firme a descarte en la criba)
 - [ ] Estrategia nº 8
 - [ ] Filtro: descartar Sharpe OOS < 0.5
 - [ ] Página por estrategia en el dashboard

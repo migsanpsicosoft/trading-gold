@@ -32,6 +32,18 @@ class StrategyData:
 
 
 @dataclass
+class IntradayData:
+    """Datos para estrategias intradía.
+
+    bars15: OHLC en precio mid + spread + volumen, barras de 15 minutos
+    (de load_intraday_ohlc). Timestamps UTC; el 'día' de agrupación es
+    el día natural UTC.
+    """
+
+    bars15: pd.DataFrame
+
+
+@dataclass
 class Strategy(ABC):
     """Base de todas las estrategias. Subclases definen name,
     description, params (con defaults) y generate_positions()."""
@@ -47,3 +59,14 @@ class Strategy(ABC):
         Debe devolver valores para todo el índice (NaN solo durante el
         calentamiento de sus ventanas; el motor los trata como 0).
         """
+
+
+@dataclass
+class IntradayStrategy(Strategy):
+    """Estrategia que opera DENTRO del día sobre barras de 15m.
+
+    generate_positions recibe IntradayData y devuelve una posición por
+    barra de 15m. Contrato adicional: posición 0 en la última barra de
+    cada día (planas overnight) — el motor hace shift(1) por barra, así
+    que una posición viva en la última barra capturaría el gap nocturno.
+    """

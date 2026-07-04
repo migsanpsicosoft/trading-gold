@@ -242,6 +242,32 @@ def _touch_meta_intraday(conn: sqlite3.Connection, key: str, content_hash: str) 
     conn.commit()
 
 
+def load_intraday_ohlc(conn: sqlite3.Connection, symbol: str = "XAU",
+                       start: str | None = None) -> pd.DataFrame:
+    """Barras 15m OHLC en precio MID + spread + volumen, para estrategias.
+
+    OHLC mid = media de los OHLC bid y ask. El spread por barra permite
+    al backtest intradía cobrar el coste REAL del momento de cada trade
+    (el spread de las 14:30 de un NFP no es el de una madrugada).
+    """
+    query = (
+        "SELECT ts, (bid_open + ask_open) / 2 AS open, "
+        "(bid_high + ask_high) / 2 AS high, "
+        "(bid_low + ask_low) / 2 AS low, "
+        "(bid_close + ask_close) / 2 AS close, "
+        "ask_close - bid_close AS spread, volume "
+        "FROM intraday_bars WHERE symbol = ? "
+        "AND bid_close IS NOT NULL AND ask_close IS NOT NULL"
+    )
+    params: list = [symbol]
+    if start:
+        query += " AND ts >= ?"
+        params.append(start)
+    df = pd.read_sql(query + " ORDER BY ts", conn, params=params, index_col="ts")
+    df.index = pd.to_datetime(df.index)
+    return df
+
+
 def load_intraday_mid(conn: sqlite3.Connection, symbol: str = "XAU",
                       start: str | None = None) -> pd.DataFrame:
     """Barras 15m como precio MID ((bid+ask)/2) + spread, indexadas por ts.
