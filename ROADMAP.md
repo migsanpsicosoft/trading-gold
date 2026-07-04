@@ -64,12 +64,15 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 - [x] Freno de drawdown -6%/-12% contra pico móvil 1 año (rehabilitable) — cartera final OOS Sharpe 0.80, CAGR 8.2%, DD -14.6%
 - [x] Config B de riesgo aprobada por Miguel (vol 10% + freno -6/-12)
 - [x] Vista de cartera por capas, apalancamiento, freno y exposición actual
-- [ ] Stress tests (pendiente, con el walk-forward final de Fase 6)
+- [x] Stress tests (episodios, crisis, shocks — implementados en Fase 6)
+- [x] Validado por Miguel (2026-07-04)
 
 ## Fase 6 — Ensemble completo
-- [ ] Backtest walk-forward integrado con costes realistas
-- [ ] Artefacto HTML por backtest
-- [ ] Objetivo: Sharpe 1.2–1.8, DD < 15%
+- [x] Backtest walk-forward integrado con costes reales: es la cartera por capas (HMM, gates, pesos, leverage y freno — todo walk-forward de punta a punta)
+- [x] Deflated Sharpe Ratio: 0.18 (contabilidad conservadora, 24 intentos) / 0.89 (estricta, 9 configs de cartera); PSR vs 0: 0.99
+- [x] Stress tests: peores episodios, ventanas de crisis (COVID +6.3%, dd −2.3%), shock instantáneo
+- [x] Artefacto HTML reproducible (métricas, DSR, stress, SVGs, hashes de datos, commit, seed) — botón en la página Riesgo
+- [x] Resultado vs objetivo: Sharpe OOS 0.80 (objetivo 1.2–1.8: NO alcanzado aún), DD −14.6% (< 15%: cumplido). El DSR conservador exige más evidencia OOS → paper trading
 
 ## Fase 7 — Paper trading
 - [ ] Broker demo (MT5 u OANDA)

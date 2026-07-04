@@ -12,6 +12,7 @@ dist/
 
 # Datos y modelos (pesados; se versionan por hash, no en git)
 data/*.db
+data/reports/
 data/raw/*
 data/processed/*
 data/models/*

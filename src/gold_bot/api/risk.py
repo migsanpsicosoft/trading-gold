@@ -16,10 +16,15 @@ router = APIRouter(prefix="/api/risk")
 
 
 @lru_cache(maxsize=1)
-def _risk_for_version(version: tuple) -> dict:
+def _portfolio_for_version(version: tuple) -> tuple:
+    """Cálculo pesado compartido por /api/risk y /api/ensemble."""
     inputs = load_meta_inputs()
-    comparison = ensemble_comparison(inputs)
-    portfolio = build_portfolio(inputs)
+    return inputs, ensemble_comparison(inputs), build_portfolio(inputs)
+
+
+@lru_cache(maxsize=1)
+def _risk_for_version(version: tuple) -> dict:
+    inputs, comparison, portfolio = _portfolio_for_version(version)
 
     raw_nets = dict(inputs.daily_net)
     for name, (_pos, net_daily) in inputs.intraday_results.items():

@@ -17,6 +17,28 @@ interface GateNow {
   cond_sharpe: number | null
   gate_on: boolean
 }
+interface Validation {
+  dsr: {
+    dsr: number
+    sharpe_annual: number
+    sr0_annual_equiv: number
+    n_trials: number
+    skew: number
+    kurtosis: number
+  }
+  stress: {
+    episodes: {
+      start: string
+      depth: number
+      days_to_trough: number
+      days_to_recover: number | null
+    }[]
+    crisis: { name: string; period: string; return: number; max_dd: number }[]
+    shocks: { gold_move: number; portfolio_impact: number }[]
+    current_exposure: number
+  }
+}
+
 interface RiskResponse {
   metrics: {
     raw_oos: Metrics
@@ -81,6 +103,8 @@ const fmt = (v: number | null | undefined, d = 2, pct = false) =>
 
 export default function Risk() {
   const [data, setData] = useState<RiskResponse | null>(null)
+  const [val, setVal] = useState<Validation | null>(null)
+  const [reportBusy, setReportBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -91,7 +115,21 @@ export default function Risk() {
       })
       .then(setData)
       .catch((e) => setError(String(e)))
+    fetch('/api/ensemble')
+      .then((r) => r.json())
+      .then(setVal)
+      .catch(() => {})
   }, [])
+
+  const generateReport = async () => {
+    setReportBusy(true)
+    try {
+      const r = await fetch('/api/ensemble/report', { method: 'POST' })
+      if (r.ok) window.open('/api/ensemble/report/latest', '_blank')
+    } finally {
+      setReportBusy(false)
+    }
+  }
 
   if (error) {
     return (
@@ -211,6 +249,114 @@ export default function Risk() {
           </tbody>
         </table>
       </div>
+
+      {val && (
+        <>
+          <header className="row-between" style={{ marginTop: '2rem' }}>
+            <h2>Validación (Fase 6)</h2>
+            <button className="btn" onClick={generateReport} disabled={reportBusy}>
+              {reportBusy ? 'Generando…' : '📄 Generar informe HTML'}
+            </button>
+          </header>
+
+          <div className="metrics">
+            <div className="card metric metric-highlight">
+              <span className="metric-label">Deflated Sharpe Ratio</span>
+              <span className="metric-value">{val.dsr.dsr.toFixed(3)}</span>
+              <span className="muted small">
+                P(skill real | {val.dsr.n_trials} intentos) · benchmark por suerte:{' '}
+                {val.dsr.sr0_annual_equiv.toFixed(2)}
+              </span>
+            </div>
+            <div className="card metric">
+              <span className="metric-label">Forma de los retornos</span>
+              <span className="metric-value">
+                skew {val.dsr.skew.toFixed(2)}
+              </span>
+              <span className="muted small">curtosis {val.dsr.kurtosis.toFixed(1)}</span>
+            </div>
+            <div className="card metric">
+              <span className="metric-label">Shock ±5% del oro hoy</span>
+              <span className="metric-value">
+                {(
+                  (val.stress.shocks.find((s) => s.gold_move === -0.05)
+                    ?.portfolio_impact ?? 0) * 100
+                ).toFixed(1)}
+                % / +
+                {(
+                  (val.stress.shocks.find((s) => s.gold_move === 0.05)
+                    ?.portfolio_impact ?? 0) * 100
+                ).toFixed(1)}
+                %
+              </span>
+              <span className="muted small">
+                exposición neta actual {val.stress.current_exposure}
+              </span>
+            </div>
+          </div>
+
+          <div className="columns">
+            <section>
+              <h2>Peores episodios de drawdown (OOS)</h2>
+              <div className="card">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Inicio</th>
+                      <th>Profundidad</th>
+                      <th>Días a valle</th>
+                      <th>Recuperación</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {val.stress.episodes.map((e, i) => (
+                      <tr key={i}>
+                        <td className="muted">{e.start}</td>
+                        <td style={{ color: '#f85149' }}>
+                          {(e.depth * 100).toFixed(1)}%
+                        </td>
+                        <td>{e.days_to_trough} días</td>
+                        <td>
+                          {e.days_to_recover != null
+                            ? `${e.days_to_recover} días`
+                            : 'en curso'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+            <section>
+              <h2>Ventanas de crisis</h2>
+              <div className="card">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Evento</th>
+                      <th>Retorno</th>
+                      <th>Max DD</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {val.stress.crisis.map((c) => (
+                      <tr key={c.name}>
+                        <td>
+                          {c.name} <span className="muted small">{c.period}</span>
+                        </td>
+                        <td style={{ color: c.return >= 0 ? '#3fb950' : '#f85149' }}>
+                          {(c.return * 100).toFixed(1)}%
+                        </td>
+                        <td>{(c.max_dd * 100).toFixed(1)}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </>
+      )}
     </div>
   )
 }
