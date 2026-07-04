@@ -13,6 +13,7 @@ from gold_bot.strategies.base import (
 from gold_bot.strategies.breakout import Breakout
 from gold_bot.strategies.macro import Macro
 from gold_bot.strategies.mean_reversion import MeanReversion
+from gold_bot.strategies.session_seasonality import SessionSeasonality
 from gold_bot.strategies.stat_arb import StatArbXauXag
 from gold_bot.strategies.trend_following import TrendFollowing
 from gold_bot.strategies.vol_breakout import VolBreakout
@@ -34,6 +35,7 @@ INTRADAY_STRATEGIES: dict[str, IntradayStrategy] = {
     for s in [
         VolBreakout(),
         VwapReversion(),
+        SessionSeasonality(),
     ]
 }
 

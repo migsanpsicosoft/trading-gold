@@ -23,7 +23,7 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 - [x] Validado por Miguel (2026-07-04)
 
 ## Fase 2 — Estrategias base
-- [ ] Definir la 8ª estrategia (solo hay 7 listadas)
+- [x] 8ª estrategia definida e implementada: seasonality de sesiones (adaptativa, t-stat móvil 90d — OOS bruto 0.04: sin edge claro, DD -9%)
 - [x] Framework común (posición objetivo [-1,1], ejecución t+1, registro STRATEGIES)
 - [x] Motor de criba: backtest vectorizado con spread real + slippage, split IS/OOS
 - [x] Página "Estrategias" (equity IS/OOS, posiciones, veredicto del filtro)
@@ -35,9 +35,8 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 - [x] Macro DXY + tipos reales (votos ±0.5 — OOS Sharpe 0.19)
 - [x] Volatility breakout intradía (opening range 15m — OOS bruto 0.47, neto -0.14: edge comido por costes; corr ~0 con todo)
 - [x] VWAP reversion intradía (OOS bruto -0.85, neto -1.54: sin edge — candidata firme a descarte en la criba)
-- [ ] Estrategia nº 8
-- [ ] Filtro: descartar Sharpe OOS < 0.5
-- [ ] Página por estrategia en el dashboard
+- [x] Página de estrategias en el dashboard (selector, equity IS/OOS, posiciones, matriz 8×8)
+- [ ] Criba final: decidir descartes con Miguel (regla original Sharpe OOS > 0.5 la incumplen las 8 — revisar criterio con bruto + correlación)
 
 ## Fase 3 — Detector de régimen (HMM)
 - [ ] Features de régimen

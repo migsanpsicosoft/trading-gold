@@ -95,6 +95,36 @@ def test_vwap_reversion_buys_stretch_below():
     assert event_day.iloc[-1] == 0.0   # plana al cierre
 
 
+def test_session_seasonality_learns_the_drift():
+    """Asia sube +0.3% cada día; Londres/NY ruido plano. La estrategia debe
+    descubrirlo sola (t-stat móvil) y ponerse larga SOLO en Asia."""
+    from gold_bot.strategies.session_seasonality import SessionSeasonality
+
+    rng = np.random.default_rng(42)
+    n_days = 60
+    closes: list[float] = []
+    price = 2000.0
+    for _ in range(n_days):
+        for bar in range(96):
+            hour = bar // 4
+            if hour < 7:  # Asia: deriva positiva consistente
+                price *= 1.0 + 0.003 / 28
+            else:  # resto: ruido sin deriva
+                price *= 1.0 + rng.normal(0, 0.00005)
+            closes.append(price)
+    bars = make_bars15(closes)
+    strat = SessionSeasonality(params={"lookback": 30, "t_threshold": 2.0})
+    pos = strat.generate_positions(IntradayData(bars))
+
+    active = pos.iloc[40 * 96:]  # tras el calentamiento
+    asia = active[active.index.hour < 7]
+    london_ny = active[(active.index.hour >= 7) & (active.index.hour < 21)]
+    assert (asia.dropna() == 1.0).mean() > 0.9      # larga en Asia casi siempre
+    assert london_ny.dropna().abs().mean() < 0.2    # casi nunca opera el resto
+    last_bars = pos.groupby(pos.index.normalize()).last().dropna()
+    assert (last_bars == 0.0).all()                 # plana al cierre
+
+
 def test_intraday_strategies_truncation_invariant():
     """Anti-leakage también en 15m: el futuro no cambia el pasado."""
     rng = np.random.default_rng(42)
