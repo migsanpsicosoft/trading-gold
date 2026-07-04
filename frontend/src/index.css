@@ -184,6 +184,34 @@ code {
   background: rgba(88, 166, 255, 0.12);
 }
 
+/* Barras de importancia (meta-modelo) */
+.imp-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.2rem 0;
+}
+
+.imp-name {
+  width: 140px;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+}
+
+.imp-bar-track {
+  flex: 1;
+  height: 10px;
+  background: var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.imp-bar {
+  height: 100%;
+  background: var(--blue);
+  border-radius: 5px;
+}
+
 /* Tabla */
 .table {
   width: 100%;

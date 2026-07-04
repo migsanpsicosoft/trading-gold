@@ -47,11 +47,14 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 - [ ] Validado por Miguel
 
 ## Fase 4 — Meta-modelo (XGBoost)
-- [ ] Triple barrier labeling (implementación propia, testeada)
-- [ ] Purged K-fold con embargo (implementación propia, testeada)
-- [ ] Dataset de señales históricas
-- [ ] XGBoost + SHAP
-- [ ] Vista de decisiones del meta-modelo
+- [x] Triple barrier labeling (implementación propia, testeada)
+- [x] Purged K-fold con embargo (implementación propia, testeada)
+- [x] Dataset de señales históricas (3.468 eventos de las 7 estrategias)
+- [x] XGBoost walk-forward + estudio ventana×reentreno (6 configs simuladas)
+- [x] Vista "Meta-modelo" (AUC, uplift, importancia, decisiones)
+- [x] Resultado honesto: AUC ~0.51-0.52 en labels v1 (barrier) y v2 (PnL propio) — sin skill accionable a nivel de señal individual
+- [ ] Decidir con Miguel el uso del edge débil: sizing continuo vs gating adaptativo por régimen vs congelar meta
+- [ ] SHAP (pendiente de que haya un modelo con skill que explicar)
 
 ## Fase 5 — Gestor de riesgo
 - [ ] Sizing por volatilidad (ATR)

@@ -4,6 +4,7 @@ import Data from './pages/Data'
 import Features from './pages/Features'
 import Strategies from './pages/Strategies'
 import Regime from './pages/Regime'
+import Meta from './pages/Meta'
 
 export default function App() {
   return (
@@ -17,7 +18,8 @@ export default function App() {
         <NavLink to="/features">Features</NavLink>
         <NavLink to="/strategies">Estrategias</NavLink>
         <NavLink to="/regime">Régimen</NavLink>
-        {/* Próximas fases: Meta-modelo, Riesgo */}
+        <NavLink to="/meta">Meta-modelo</NavLink>
+        {/* Próxima fase: Riesgo */}
       </nav>
       <Routes>
         <Route path="/" element={<Home />} />
@@ -25,6 +27,7 @@ export default function App() {
         <Route path="/features" element={<Features />} />
         <Route path="/strategies" element={<Strategies />} />
         <Route path="/regime" element={<Regime />} />
+        <Route path="/meta" element={<Meta />} />
       </Routes>
     </>
   )
