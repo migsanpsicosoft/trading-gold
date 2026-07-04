@@ -84,7 +84,7 @@ export default function App() {
         <div className="card error">
           <strong>No se pudo conectar con el backend.</strong>
           <p>
-            Arranca la API con: <code>uvicorn gold_bot.api.main:app --reload --port 8000</code>
+            Arranca la API con: <code>uvicorn gold_bot.api.main:app --reload --port 8100</code>
           </p>
           <p className="muted">{error}</p>
         </div>

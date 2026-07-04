@@ -1,10 +1,12 @@
 """Backend del dashboard: API JSON que consume el frontend React.
 
 Arrancar en desarrollo:
-    uvicorn gold_bot.api.main:app --reload --port 8000
+    uvicorn gold_bot.api.main:app --reload --port 8100
 
 El frontend (Vite, puerto 5173) proxya las llamadas /api/* hacia aquí,
 así que en desarrollo no hay problemas de CORS entre ambos.
+
+Puerto 8100 (no 8000) porque el backend de comerc-IA-l ya usa el 8000.
 """
 
 import re

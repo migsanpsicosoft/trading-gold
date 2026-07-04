@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     // Todas las llamadas del frontend a /api/* van al backend FastAPI.
     proxy: {
-      '/api': 'http://localhost:8000',
+      '/api': 'http://localhost:8100',
     },
   },
 })

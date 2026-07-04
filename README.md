@@ -11,9 +11,11 @@ Machine Learning*, M. López de Prado.
 
 Dos procesos en desarrollo:
 
-- **Backend** — FastAPI (Python, puerto 8000): expone los datos como API JSON.
+- **Backend** — FastAPI (Python, puerto 8100): expone los datos como API JSON.
 - **Frontend** — React + Vite + TypeScript (puerto 5173): consume la API.
-  Vite proxya `/api/*` → `localhost:8000`, así que no hay CORS en desarrollo.
+  Vite proxya `/api/*` → `localhost:8100`, así que no hay CORS en desarrollo.
+
+(El puerto es 8100 y no 8000 porque el backend de comerc-IA-l usa el 8000.)
 
 ## Setup (Windows / PowerShell)
 
@@ -37,7 +39,7 @@ Levantar el dashboard (dos terminales):
 ```powershell
 # Terminal 1 — backend
 .venv\Scripts\Activate.ps1
-uvicorn gold_bot.api.main:app --reload --port 8000
+uvicorn gold_bot.api.main:app --reload --port 8100
 
 # Terminal 2 — frontend  →  abre http://localhost:5173
 cd frontend
