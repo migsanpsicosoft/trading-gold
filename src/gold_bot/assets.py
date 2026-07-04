@@ -27,4 +27,9 @@ TRADEABLE_ASSETS: dict[str, AssetConfig] = {
     "EUR": AssetConfig("EUR", "EUR/USD", "EUR_USD", 0.00012),
     "WTI": AssetConfig("WTI", "Petróleo WTI", "WTICO_USD", 0.035),
     "SPX": AssetConfig("SPX", "S&P 500", "SPX500_USD", 0.6),
+    # Segunda oleada (2026-07-04): un representante por familia
+    "JPY": AssetConfig("JPY", "USD/JPY", "USD_JPY", 0.018),
+    "HG": AssetConfig("HG", "Cobre", "XCU_USD", 0.006),
+    "NG": AssetConfig("NG", "Gas natural", "NATGAS_USD", 0.009),
+    "USB": AssetConfig("USB", "T-Bond 30Y", "USB30Y_USD", 0.04),
 }

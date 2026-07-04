@@ -32,6 +32,10 @@ SYMBOLS: dict[str, tuple[str, str]] = {
     "EUR": ("EURUSD=X", "EUR/USD spot"),
     "WTI": ("CL=F", "Petróleo WTI — futuros NYMEX front month"),
     "SPX": ("ES=F", "S&P 500 — futuros E-mini front month"),
+    "JPY": ("JPY=X", "USD/JPY spot"),
+    "HG": ("HG=F", "Cobre — futuros COMEX front month"),
+    "NG": ("NG=F", "Gas natural — futuros NYMEX front month"),
+    "USB": ("ZB=F", "T-Bond 30Y USA — futuros CBOT front month"),
 }
 
 HISTORY_START = "2005-01-01"  # ~20 años: cubre varios regímenes de mercado

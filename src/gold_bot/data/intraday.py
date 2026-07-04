@@ -36,6 +36,10 @@ INTRADAY_SYMBOLS: dict[str, str] = {
     "EUR": "eurusd",
     "WTI": "lightcmdusd",
     "SPX": "usa500idxusd",
+    "JPY": "usdjpy",
+    "HG": "coppercmdusd",
+    "NG": "gascmdusd",
+    "USB": "ustbondtrusd",
 }
 INTRADAY_TIMEFRAME = "m15"
 # El oro conserva su histórico desde 2015; los activos añadidos en la
