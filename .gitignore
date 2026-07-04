@@ -1,0 +1,28 @@
+# Entorno
+.venv/
+.env
+.claude/settings.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Datos y modelos (pesados; se versionan por hash, no en git)
+data/raw/*
+data/processed/*
+data/models/*
+!data/**/.gitkeep
+
+# Frontend
+node_modules/
+frontend/dist/
+
+# Herramientas
+.pytest_cache/
+.ruff_cache/
+
+# Notebooks: checkpoints
+.ipynb_checkpoints/

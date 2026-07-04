@@ -1,0 +1,222 @@
+/* Tema oscuro estilo terminal de trading */
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --border: #30363d;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --gold: #d4a017;
+  --green: #3fb950;
+  --blue: #58a6ff;
+  --red: #f85149;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+code {
+  font-family: 'Cascadia Code', Consolas, monospace;
+  font-size: 0.9em;
+  color: var(--gold);
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.version {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: normal;
+}
+
+h2 {
+  font-size: 1.1rem;
+  margin: 1.5rem 0 0.75rem;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.small {
+  font-size: 0.85rem;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.card.error {
+  border-color: var(--red);
+}
+
+/* Métricas superiores */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.metric-label {
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.metric-value {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+/* Dos columnas */
+.columns {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 2rem;
+}
+
+@media (max-width: 800px) {
+  .columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Fases */
+.phase-current {
+  border-color: var(--blue);
+}
+
+.phase-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--text);
+  font: inherit;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.phase-title {
+  flex: 1;
+  font-weight: 600;
+}
+
+.phase-count {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.dot-done {
+  background: var(--green);
+}
+
+.dot-current {
+  background: var(--blue);
+}
+
+.progress {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  margin-top: 0.6rem;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--gold);
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.phase-items {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+}
+
+.phase-items li {
+  padding: 0.15rem 0;
+  color: var(--text);
+}
+
+.phase-items li.item-done {
+  color: var(--muted);
+}
+
+.check {
+  display: inline-block;
+  width: 1.2em;
+  color: var(--green);
+}
+
+/* Módulos */
+.modules {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.modules li {
+  padding: 0.3rem 0;
+}
+
+.badge {
+  display: inline-block;
+  width: 1.5em;
+  text-align: center;
+  border-radius: 4px;
+  margin-right: 0.4rem;
+  font-size: 0.85em;
+}
+
+.badge-ok {
+  color: var(--green);
+}
+
+.badge-pending {
+  color: var(--muted);
+}
