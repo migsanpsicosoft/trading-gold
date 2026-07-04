@@ -152,11 +152,19 @@ def build_multi_portfolio(keys: list[str] | None = None,
     books = {k: build_asset_book(k) for k in keys}
 
     streams = pd.DataFrame({k: b.stream for k, b in books.items()})
-    # parity entre activos: reutiliza la misma función (los "gates" a
-    # nivel activo son todo-1: la selección ya ocurrió dentro del libro)
-    all_on = pd.DataFrame(1.0, index=streams.index, columns=streams.columns)
+    # GATE POR LIBRO (walk-forward): un libro solo pesa si su Sharpe
+    # móvil de 250 días es positivo — la misma medicina del gating de
+    # estrategias, un nivel más arriba. Un activo cuya receta no
+    # funciona se apaga solo, sin cherry-picking sobre el OOS.
+    # (conditional_gate con régimen constante = gate incondicional.)
+    from gold_bot.risk.gating import conditional_gate
+
+    neutral = pd.Series(0, index=streams.index)
+    book_gates = pd.DataFrame(
+        {k: conditional_gate(streams[k], neutral) for k in streams.columns}
+    )
     asset_weights = inverse_vol_weights(
-        {k: streams[k] for k in streams.columns}, all_on
+        {k: streams[k] for k in streams.columns}, book_gates
     )
     combined = (streams * asset_weights).sum(axis=1)
 
@@ -169,6 +177,7 @@ def build_multi_portfolio(keys: list[str] | None = None,
     return {
         "books": books,
         "streams": streams,
+        "book_gates": book_gates,
         "asset_weights": asset_weights,
         "leverage": leverage,
         "brake": brake,

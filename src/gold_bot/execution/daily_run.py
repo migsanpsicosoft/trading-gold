@@ -101,17 +101,37 @@ def run(dry_run: bool = False) -> dict:
     result = {"signal_date": signal_date, "exposure": exposure,
               "target_units": target, "order_units": order, "dry_run": dry_run}
 
-    # 6) informe por Telegram
+    # 6) informe por Telegram con TODAS las señales del libro
     regime_now = int(inputs.regimes["regime"].iloc[-1])
     nets = dict(inputs.daily_net)
     for name, (_pos, net_daily) in inputs.intraday_results.items():
         nets[name] = net_daily
     gates = current_gate_report(nets, inputs.regimes["regime"])
+    gate_by_name = {g["strategy"]: g["gate_on"] for g in gates}
+    weights_now = portfolio["weights"].iloc[-1]
+    signals = []
+    for name, positions in inputs.daily_positions.items():
+        last_pos = positions.dropna()
+        signals.append({
+            "name": name,
+            "position": float(last_pos.iloc[-1]) if len(last_pos) else 0.0,
+            "gate_on": bool(gate_by_name.get(name, True)),
+            "weight": float(weights_now.get(name, 0.0)),
+        })
+    for name, (pos_daily, _net) in inputs.intraday_results.items():
+        last_pos = pos_daily.dropna()
+        signals.append({
+            "name": name,
+            "position": float(last_pos.iloc[-1]) if len(last_pos) else 0.0,
+            "gate_on": bool(gate_by_name.get(name, True)),
+            "weight": float(weights_now.get(name, 0.0)),
+        })
     send_telegram(format_daily_report(
         result, balance=state.balance, currency=state.currency,
         regime_label=REGIME_LABELS[regime_now],
         gates_on=sum(g["gate_on"] for g in gates), gates_total=len(gates),
         brake=float(portfolio["brake"].iloc[-1]),
+        signals=signals,
     ))
     return result
 

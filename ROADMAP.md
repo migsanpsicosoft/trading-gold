@@ -86,5 +86,17 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 - [ ] Miguel: OANDA practice + bot de Telegram → credenciales al `.env` DEL SERVIDOR + dry-run
 - [ ] Mínimo 3 meses de paper trading
 
+## Expansión multi-activo (research 2026-07-05)
+- [x] Universo de 9 activos: datos diarios (2005→) + intradía 15m bid/ask (2019→, oro 2015→) — ~1.7M barras, integridad verificada
+- [x] Libro por activo (estrategias universales + HMM propio + gating + parity) y cartera global con gate por libro
+- [x] Resultado honesto: libros nuevos sin edge suficiente (JPY 0.25, NG 0.23, resto ~0 o negativo); correlación entre libros ~0.00 (diversificación perfecta pero sin edge que diversificar). Combinado 0.24 < oro solo 0.70 → NO desplegado
+- [x] Página "Multi-activo" con los números completos
+- [ ] Research futuro: estrategias específicas por familia (p. ej. mean reversion salió positiva en 7 de 9 activos — hipótesis a priori para una v2 con validación propia)
+
+## Fase 7bis — Operación y monitorización (2026-07-05)
+- [x] Informe diario de Telegram con TODAS las señales por estrategia
+- [x] Bot interactivo de Telegram: /status /posiciones /informe /actualizar (servicio systemd)
+- [ ] Miguel: credenciales OANDA + Telegram al .env del servidor
+
 ## Fase 8 — Dinero real pequeño
 - [ ] Solo si live ≈ backtest

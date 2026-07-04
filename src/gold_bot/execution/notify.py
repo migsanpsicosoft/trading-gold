@@ -50,13 +50,17 @@ def send_telegram(text: str) -> bool:
 
 def format_daily_report(result: dict, balance: float, currency: str,
                         regime_label: str, gates_on: int, gates_total: int,
-                        brake: float) -> str:
-    """Mensaje del informe diario (puro, testeado)."""
+                        brake: float, signals: list[dict] | None = None) -> str:
+    """Mensaje del informe diario (puro, testeado).
+
+    signals: [{name, position, gate_on, weight}] — la señal de CADA
+    estrategia del libro, no solo el neto.
+    """
     order = result["order_units"]
     order_txt = (f"{'🟢 COMPRA' if order > 0 else '🔴 VENTA'} {abs(order)} oz"
                  if order != 0 else "⚪ sin cambios")
     mode = " (dry-run 🧪)" if result.get("dry_run") else ""
-    return (
+    msg = (
         f"<b>🥇 gold-bot — informe diario{mode}</b>\n"
         f"Señal del {result['signal_date']}\n\n"
         f"Régimen: <b>{regime_label}</b> · gates {gates_on}/{gates_total}"
@@ -66,6 +70,18 @@ def format_daily_report(result: dict, balance: float, currency: str,
         f"Orden: {order_txt}\n"
         f"Balance: <b>{balance:,.2f} {currency}</b>"
     )
+    if signals:
+        lines = []
+        for s in signals:
+            icon = "🟢" if s["gate_on"] else "🔴"
+            pos = s["position"]
+            arrow = "▲" if pos > 0 else ("▼" if pos < 0 else "·")
+            lines.append(
+                f"{icon} <code>{s['name']:<18}</code> {arrow} "
+                f"{pos:+.2f} · peso {s['weight']:.0%}"
+            )
+        msg += "\n\n<b>Señales por estrategia</b>\n" + "\n".join(lines)
+    return msg
 
 
 def _discover_chat_id() -> None:
