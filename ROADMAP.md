@@ -36,7 +36,7 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 - [x] Volatility breakout intradía (opening range 15m — OOS bruto 0.47, neto -0.14: edge comido por costes; corr ~0 con todo)
 - [x] VWAP reversion intradía (OOS bruto -0.85, neto -1.54: sin edge — candidata firme a descarte en la criba)
 - [x] Página de estrategias en el dashboard (selector, equity IS/OOS, posiciones, matriz 8×8)
-- [ ] Criba final: decidir descartes con Miguel (regla original Sharpe OOS > 0.5 la incumplen las 8 — revisar criterio con bruto + correlación)
+- [x] Criba final aprobada por Miguel: fuera vwap_reversion (sin edge bruto); 7 vivas, stat_arb y session_seasonality en observación hasta post-meta-modelo
 
 ## Fase 3 — Detector de régimen (HMM)
 - [ ] Features de régimen

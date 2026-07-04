@@ -17,7 +17,6 @@ from gold_bot.strategies.session_seasonality import SessionSeasonality
 from gold_bot.strategies.stat_arb import StatArbXauXag
 from gold_bot.strategies.trend_following import TrendFollowing
 from gold_bot.strategies.vol_breakout import VolBreakout
-from gold_bot.strategies.vwap_reversion import VwapReversion
 
 STRATEGIES: dict[str, Strategy] = {
     s.name: s
@@ -30,11 +29,14 @@ STRATEGIES: dict[str, Strategy] = {
     ]
 }
 
+# Criba Fase 2 (2026-07-04, aprobada por Miguel): vwap_reversion descartada
+# (Sharpe OOS bruto -0.85: sin edge que rescatar). El código queda en
+# vwap_reversion.py como referencia. stat_arb y session_seasonality en
+# observación hasta después del meta-modelo (F4).
 INTRADAY_STRATEGIES: dict[str, IntradayStrategy] = {
     s.name: s
     for s in [
         VolBreakout(),
-        VwapReversion(),
         SessionSeasonality(),
     ]
 }
