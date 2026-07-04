@@ -58,6 +58,25 @@ def list_strategies() -> list[dict]:
     return out
 
 
+# Declarada ANTES que /{name}: FastAPI resuelve rutas en orden y
+# "/correlation" matchearía el parámetro dinámico.
+@router.get("/correlation")
+def correlation_matrix() -> dict:
+    """Correlación entre los retornos netos diarios de las estrategias.
+
+    La diversificación real vive aquí: dos estrategias con Sharpe
+    mediocre pero correlación ~0 (o negativa) suman más que una buena.
+    """
+    names = list(STRATEGIES)
+    rets = pd.DataFrame({n: _run(n).net_returns for n in names})
+    corr = rets.corr()
+    return {
+        "names": names,
+        "matrix": [[round(float(corr.iloc[i, j]), 3) for j in range(len(names))]
+                   for i in range(len(names))],
+    }
+
+
 @router.get("/{name}")
 def strategy_backtest(name: str) -> dict:
     """Backtest completo: métricas IS/OOS, equity curve y posiciones."""

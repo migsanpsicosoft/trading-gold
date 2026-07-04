@@ -28,8 +28,9 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 - [x] Motor de criba: backtest vectorizado con spread real + slippage, split IS/OOS
 - [x] Página "Estrategias" (equity IS/OOS, posiciones, veredicto del filtro)
 - [x] Trend following (SMA 50/200 — OOS Sharpe 0.40, pendiente de mejora vía régimen/meta)
-- [ ] Breakout
-- [ ] Mean reversion
+- [x] Breakout (Donchian 55/20 — OOS Sharpe 0.28; corr 0.80 con TF, vigilar redundancia)
+- [x] Mean reversion (Bollinger z 20d — OOS Sharpe -0.04; corr -0.6/-0.7 con las trend: diversifica)
+- [x] Matriz de correlación entre estrategias en el dashboard
 - [ ] Stat arb XAU/XAG
 - [ ] Macro (DXY, tipos reales)
 - [ ] Volatility breakout

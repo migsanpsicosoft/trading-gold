@@ -95,6 +95,33 @@ def test_all_strategies_emit_valid_positions(strategy_data):
         assert len(valid) > 100, f"{name}: demasiados NaN"
 
 
+def test_breakout_enters_and_exits():
+    from gold_bot.strategies.breakout import Breakout
+
+    # 80 días planos → subida fuerte 30 días → desplome
+    closes = [100.0] * 80 + list(np.linspace(101, 140, 30)) + list(np.linspace(138, 90, 15))
+    bars = make_bars(closes)
+    pos = Breakout(params={"entry": 55, "exit": 20}).generate_positions(
+        StrategyData(bars=bars, features=pd.DataFrame(index=bars.index))
+    )
+    assert pos.iloc[85] == 1.0  # rompió el máximo de 55d → largo
+    assert pos.iloc[-1] in (-1.0, 0.0)  # el desplome lo saca (y puede girarlo)
+    assert pos.iloc[79] == 0.0  # plano: sin ruptura, fuera
+
+
+def test_mean_reversion_buys_the_dip():
+    from gold_bot.strategies.mean_reversion import MeanReversion
+
+    # precio estable con caída brusca del 8% y recuperación
+    closes = [100.0 + 0.1 * (i % 5) for i in range(60)] + [92.0, 92.5] + [100.0] * 10
+    bars = make_bars(closes)
+    pos = MeanReversion().generate_positions(
+        StrategyData(bars=bars, features=pd.DataFrame(index=bars.index))
+    )
+    assert pos.iloc[60] == 1.0  # el desplome estira el z por debajo de -2 → largo
+    assert pos.iloc[-1] == 0.0  # recuperada la media → fuera
+
+
 def test_strategies_are_truncation_invariant(strategy_data):
     """Anti-leakage: recortar el futuro no cambia las posiciones pasadas."""
     from gold_bot.data.features import compute_features

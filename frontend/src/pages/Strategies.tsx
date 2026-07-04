@@ -100,6 +100,50 @@ function PositionsChart({ positions }: { positions: Point[] }) {
   return <div ref={ref} className="chart chart-small" />
 }
 
+interface CorrData {
+  names: string[]
+  matrix: number[][]
+}
+
+/** rojo = correlación alta (solapan), verde = negativa (se cubren). */
+function corrColor(v: number, isDiagonal: boolean): string {
+  if (isDiagonal) return 'rgba(139, 148, 158, 0.15)'
+  if (v >= 0) return `rgba(248, 81, 73, ${Math.min(v, 1) * 0.55})`
+  return `rgba(63, 185, 80, ${Math.min(-v, 1) * 0.55})`
+}
+
+function CorrelationMatrix({ corr }: { corr: CorrData }) {
+  return (
+    <table className="table corr">
+      <thead>
+        <tr>
+          <th></th>
+          {corr.names.map((n) => (
+            <th key={n}>{n}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {corr.names.map((row, i) => (
+          <tr key={row}>
+            <td>
+              <strong>{row}</strong>
+            </td>
+            {corr.names.map((col, j) => (
+              <td
+                key={col}
+                style={{ background: corrColor(corr.matrix[i][j], i === j), textAlign: 'center' }}
+              >
+                {corr.matrix[i][j].toFixed(2)}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )
+}
+
 const fmt = (v: number | null | undefined, digits = 2, pct = false) =>
   v == null ? '—' : pct ? `${(v * 100).toFixed(digits)}%` : v.toFixed(digits)
 
@@ -120,6 +164,7 @@ export default function Strategies() {
   const [catalog, setCatalog] = useState<StrategyInfo[]>([])
   const [selected, setSelected] = useState<string | null>(null)
   const [backtest, setBacktest] = useState<BacktestResponse | null>(null)
+  const [corr, setCorr] = useState<CorrData | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -133,6 +178,10 @@ export default function Strategies() {
         if (list.length > 0) setSelected(list[0].name)
       })
       .catch((e) => setError(String(e)))
+    fetch('/api/strategies/correlation')
+      .then((r) => r.json())
+      .then(setCorr)
+      .catch(() => {}) // la matriz es secundaria: no rompe la página
   }, [])
 
   useEffect(() => {
@@ -219,6 +268,18 @@ export default function Strategies() {
           <div className="card chart-card">
             <PositionsChart positions={backtest.positions} />
           </div>
+
+          {corr && corr.names.length > 1 && (
+            <>
+              <h2>Correlación entre estrategias (retornos netos diarios)</h2>
+              <p className="muted small">
+                Verde/cero = diversifican (lo que buscamos) · rojo = solapan
+              </p>
+              <div className="card">
+                <CorrelationMatrix corr={corr} />
+              </div>
+            </>
+          )}
         </>
       )}
     </div>
