@@ -11,7 +11,7 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 - [x] Backend del dashboard: API FastAPI (`/api/status`)
 - [x] Frontend del dashboard: React + Vite + TypeScript (Home con estado del proyecto)
 - [x] Repo privado en GitHub (migsanpsicosoft/trading-gold)
-- [ ] Entorno levantado y validado en la máquina de Miguel
+- [x] Entorno levantado y validado en la máquina de Miguel
 
 ## Fase 1 — Datos
 - [x] Fuente de datos diarios: yfinance (GC=F, SI=F, DX-Y.NYB, ^TNX, TIP)
@@ -80,8 +80,10 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 - [x] Conector OANDA v20 (estado de cuenta, posición, orden a mercado)
 - [x] Runner diario (`python -m gold_bot.execution.daily_run [--dry-run]`): datos → exposición → orden por diferencia → live_log
 - [x] Página "Live": tracking live vs backtest + registro de ejecuciones
-- [ ] Miguel: cuenta OANDA practice + credenciales en .env + primer dry-run
-- [ ] Tarea programada nocturna (schtasks — comando en README)
+- [x] Informe diario por Telegram + alertas de error del runner
+- [x] Desplegado en EC2 (Ubuntu 24.04): systemd `gold-bot-dashboard` (127.0.0.1:8100, acceso por túnel SSH), cron lun-vie 23:05 UTC, swap 2G, DB transferida
+- [x] Runner validado en servidor de punta a punta (falla limpio solo en credenciales)
+- [ ] Miguel: OANDA practice + bot de Telegram → credenciales al `.env` DEL SERVIDOR + dry-run
 - [ ] Mínimo 3 meses de paper trading
 
 ## Fase 8 — Dinero real pequeño
