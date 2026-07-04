@@ -34,6 +34,19 @@ CREATE TABLE IF NOT EXISTS dataset_meta (
     last_updated TEXT,      -- ISO datetime UTC
     content_hash TEXT       -- sha256 del contenido de bars para ese símbolo
 );
+
+-- Barras intradía (15m) con BID y ASK en la misma fila: el spread real
+-- de cada barra es ask_close - bid_close, sin joins. El volumen es
+-- "tick volume" (nº de cambios de precio), no volumen negociado real:
+-- en OTC (forex/metales spot) el volumen real no existe públicamente.
+CREATE TABLE IF NOT EXISTS intraday_bars (
+    symbol    TEXT NOT NULL,
+    ts        TEXT NOT NULL,  -- ISO UTC yyyy-mm-ddTHH:MM:SS
+    bid_open  REAL, bid_high REAL, bid_low REAL, bid_close REAL,
+    ask_open  REAL, ask_high REAL, ask_low REAL, ask_close REAL,
+    volume    REAL,
+    PRIMARY KEY (symbol, ts)
+);
 """
 
 
@@ -50,6 +63,8 @@ def connect(db_path: Path | str | None = None) -> sqlite3.Connection:
     path = db_path if db_path is not None else default_db_path()
     if isinstance(path, Path):
         path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(path)
+    # timeout alto: si dos procesos escriben a la vez (p. ej. backfill en
+    # curso + auto-update del backend) esperan el lock en vez de fallar
+    conn = sqlite3.connect(path, timeout=30)
     conn.executescript(SCHEMA)
     return conn

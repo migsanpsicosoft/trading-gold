@@ -18,7 +18,7 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 - [x] Pipeline incremental (SQLite, solape 7d, hash por dataset)
 - [x] Auto-actualización: al arrancar el backend si los datos tienen >24h + botón manual
 - [x] Página "Data explorer" (velas TradingView + volumen + estado de datasets)
-- [ ] Decidir fuente de datos intradía (necesaria para VWAP y vol breakout)
+- [x] Intradía 15m XAU: Dukascopy bid/ask (spread real por barra), backfill por trozos
 - [ ] Features técnicas base
 - [ ] Validado por Miguel
 

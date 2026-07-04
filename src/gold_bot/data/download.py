@@ -113,12 +113,16 @@ def _touch_meta(conn: sqlite3.Connection, symbol: str) -> str:
     return content_hash
 
 
-def is_stale(conn: sqlite3.Connection) -> bool:
-    """True si algún símbolo no se ha actualizado en STALE_AFTER_HOURS."""
+def is_stale(conn: sqlite3.Connection, keys: list[str] | None = None) -> bool:
+    """True si algún dataset no se ha actualizado en STALE_AFTER_HOURS.
+
+    `keys` permite incluir también datasets intradía (p. ej. 'XAU_m15');
+    por defecto solo los símbolos diarios.
+    """
     threshold = datetime.now(UTC) - timedelta(hours=STALE_AFTER_HOURS)
-    for symbol in SYMBOLS:
+    for key in keys if keys is not None else list(SYMBOLS):
         row = conn.execute(
-            "SELECT last_updated FROM dataset_meta WHERE symbol = ?", (symbol,)
+            "SELECT last_updated FROM dataset_meta WHERE symbol = ?", (key,)
         ).fetchone()
         if row is None or datetime.fromisoformat(row[0]) < threshold:
             return True

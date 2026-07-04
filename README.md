@@ -7,6 +7,17 @@ Machine Learning*, M. López de Prado.
 
 **Estado y progreso:** ver [ROADMAP.md](ROADMAP.md) o la página Home del dashboard.
 
+## Datos
+
+- **Diario** (2005→hoy): yfinance → SQLite. XAU, XAG, DXY, US10Y, TIP.
+- **Intradía 15m** (2015→hoy, solo XAU): Dukascopy vía `dukascopy-node`
+  (npx). Velas **bid y ask** → spread real por barra, para modelar
+  costes realistas.
+- Actualización automática: incremental al arrancar el backend si los
+  datos tienen >24h, o con el botón "Actualizar datos" del dashboard.
+- Backfill intradía inicial (tarda bastantes minutos, por trozos anuales
+  reanudables): `python -m gold_bot.data.intraday`
+
 ## Arquitectura del dashboard
 
 Dos procesos en desarrollo:

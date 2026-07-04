@@ -8,12 +8,13 @@ import {
 
 // --- Tipos que devuelve el backend ---
 interface Bar {
-  time: string // 'yyyy-mm-dd'
+  time: number // segundos epoch UTC
   open: number
   high: number
   low: number
   close: number
   volume: number | null
+  spread?: number | null // solo intradía: ask - bid real de la barra
 }
 interface SymbolSummary {
   symbol: string
@@ -26,8 +27,35 @@ interface SymbolSummary {
   content_hash: string | null
 }
 
+type Timeframe = 'D' | '1h' | '15m'
+
+const TIMEFRAMES: { key: Timeframe; label: string }[] = [
+  { key: 'D', label: 'Diario' },
+  { key: '1h', label: '1h' },
+  { key: '15m', label: '15m' },
+]
+
+// Rangos disponibles (en días) según timeframe
+const RANGES: Record<'daily' | 'intraday', { label: string; days: number | null }[]> = {
+  daily: [
+    { label: '1A', days: 365 },
+    { label: '3A', days: 3 * 365 },
+    { label: '10A', days: 10 * 365 },
+    { label: 'Todo', days: null },
+  ],
+  intraday: [
+    { label: '1S', days: 7 },
+    { label: '1M', days: 30 },
+    { label: '3M', days: 90 },
+    { label: '1A', days: 365 },
+  ],
+}
+
+// Solo estos símbolos tienen datos intradía
+const INTRADAY_SYMBOLS = ['XAU']
+
 /** Gráfico de velas + volumen con lightweight-charts (TradingView). */
-function CandleChart({ bars }: { bars: Bar[] }) {
+function CandleChart({ bars, showTime }: { bars: Bar[]; showTime: boolean }) {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -40,7 +68,7 @@ function CandleChart({ bars }: { bars: Bar[] }) {
         vertLines: { color: '#21262d' },
         horzLines: { color: '#21262d' },
       },
-      timeScale: { borderColor: '#30363d' },
+      timeScale: { borderColor: '#30363d', timeVisible: showTime },
       rightPriceScale: { borderColor: '#30363d' },
     })
 
@@ -53,7 +81,7 @@ function CandleChart({ bars }: { bars: Bar[] }) {
     })
     candles.setData(
       bars.map((b) => ({
-        time: (new Date(b.time).getTime() / 1000) as UTCTimestamp,
+        time: b.time as UTCTimestamp,
         open: b.open,
         high: b.high,
         low: b.low,
@@ -71,7 +99,7 @@ function CandleChart({ bars }: { bars: Bar[] }) {
       chart.priceScale('volume').applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } })
       volume.setData(
         bars.map((b) => ({
-          time: (new Date(b.time).getTime() / 1000) as UTCTimestamp,
+          time: b.time as UTCTimestamp,
           value: b.volume ?? 0,
           color: b.close >= b.open ? 'rgba(63,185,80,0.4)' : 'rgba(248,81,73,0.4)',
         })),
@@ -80,7 +108,7 @@ function CandleChart({ bars }: { bars: Bar[] }) {
 
     chart.timeScale().fitContent()
     return () => chart.remove()
-  }, [bars])
+  }, [bars, showTime])
 
   return <div ref={ref} className="chart" />
 }
@@ -93,21 +121,18 @@ function relativeTime(iso: string | null): string {
   return `hace ${Math.round(minutes / (60 * 24))} días`
 }
 
-const RANGES: { label: string; years: number | null }[] = [
-  { label: '1A', years: 1 },
-  { label: '3A', years: 3 },
-  { label: '10A', years: 10 },
-  { label: 'Todo', years: null },
-]
-
 export default function Data() {
   const [summary, setSummary] = useState<SymbolSummary[]>([])
   const [symbol, setSymbol] = useState('XAU')
-  const [rangeYears, setRangeYears] = useState<number | null>(3)
+  const [timeframe, setTimeframe] = useState<Timeframe>('D')
+  const [rangeDays, setRangeDays] = useState<number | null>(3 * 365)
   const [bars, setBars] = useState<Bar[]>([])
   const [updating, setUpdating] = useState(false)
   const [refresh, setRefresh] = useState(0)
   const [error, setError] = useState<string | null>(null)
+
+  const isIntraday = timeframe !== 'D'
+  const ranges = RANGES[isIntraday ? 'intraday' : 'daily']
 
   const loadSummary = () =>
     fetch('/api/data/summary')
@@ -120,17 +145,29 @@ export default function Data() {
   }, [])
 
   useEffect(() => {
-    let url = `/api/data/bars/${symbol}`
-    if (rangeYears != null) {
-      const from = new Date()
-      from.setFullYear(from.getFullYear() - rangeYears)
-      url += `?start=${from.toISOString().slice(0, 10)}`
+    let url = `/api/data/bars/${symbol}?timeframe=${timeframe}`
+    if (rangeDays != null) {
+      const from = new Date(Date.now() - rangeDays * 86400_000)
+      url += `&start=${from.toISOString().slice(0, 10)}`
     }
     fetch(url)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`API respondió ${r.status}`)
+        return r.json()
+      })
       .then(setBars)
       .catch((e) => setError(String(e)))
-  }, [symbol, rangeYears, refresh])
+  }, [symbol, timeframe, rangeDays, refresh])
+
+  const selectTimeframe = (tf: Timeframe) => {
+    setTimeframe(tf)
+    if (tf === 'D') {
+      setRangeDays(3 * 365)
+    } else {
+      setRangeDays(30)
+      if (!INTRADAY_SYMBOLS.includes(symbol)) setSymbol('XAU')
+    }
+  }
 
   const runUpdate = async () => {
     setUpdating(true)
@@ -147,7 +184,14 @@ export default function Data() {
     }
   }
 
-  const selected = summary.find((s) => s.symbol === symbol)
+  // Solo los símbolos diarios van al selector (el intradía es una fila aparte)
+  const dailySymbols = summary.filter((s) => !s.symbol.includes('·'))
+  const selected = dailySymbols.find((s) => s.symbol === symbol)
+
+  const spreads = bars.map((b) => b.spread).filter((s): s is number => s != null)
+  const avgSpread = spreads.length
+    ? spreads.reduce((a, b) => a + b, 0) / spreads.length
+    : null
 
   return (
     <div className="container wide">
@@ -155,7 +199,7 @@ export default function Data() {
         <div>
           <h1>Data explorer</h1>
           <p className="muted">
-            OHLCV diario desde Yahoo Finance — incremental, con hash por dataset
+            Diario: Yahoo Finance · Intradía 15m: Dukascopy (bid/ask, spread real)
           </p>
         </div>
         <button className="btn" onClick={runUpdate} disabled={updating}>
@@ -167,23 +211,38 @@ export default function Data() {
 
       <div className="toolbar">
         <div className="seg">
-          {summary.map((s) => (
+          {TIMEFRAMES.map((tf) => (
             <button
-              key={s.symbol}
-              className={`seg-btn ${s.symbol === symbol ? 'seg-active' : ''}`}
-              onClick={() => setSymbol(s.symbol)}
-              title={s.description}
+              key={tf.key}
+              className={`seg-btn ${tf.key === timeframe ? 'seg-active' : ''}`}
+              onClick={() => selectTimeframe(tf.key)}
             >
-              {s.symbol}
+              {tf.label}
             </button>
           ))}
         </div>
         <div className="seg">
-          {RANGES.map((r) => (
+          {dailySymbols.map((s) => {
+            const disabled = isIntraday && !INTRADAY_SYMBOLS.includes(s.symbol)
+            return (
+              <button
+                key={s.symbol}
+                className={`seg-btn ${s.symbol === symbol ? 'seg-active' : ''}`}
+                onClick={() => setSymbol(s.symbol)}
+                disabled={disabled}
+                title={disabled ? 'Sin datos intradía' : s.description}
+              >
+                {s.symbol}
+              </button>
+            )
+          })}
+        </div>
+        <div className="seg">
+          {ranges.map((r) => (
             <button
               key={r.label}
-              className={`seg-btn ${r.years === rangeYears ? 'seg-active' : ''}`}
-              onClick={() => setRangeYears(r.years)}
+              className={`seg-btn ${r.days === rangeDays ? 'seg-active' : ''}`}
+              onClick={() => setRangeDays(r.days)}
             >
               {r.label}
             </button>
@@ -191,13 +250,21 @@ export default function Data() {
         </div>
         {selected && (
           <span className="muted small">
-            {selected.description} · {bars.length} barras
+            {selected.description} · {bars.length.toLocaleString()} barras
+            {avgSpread != null && <> · spread medio {avgSpread.toFixed(3)} $</>}
           </span>
         )}
       </div>
 
       <div className="card chart-card">
-        {bars.length > 0 ? <CandleChart bars={bars} /> : <p className="muted">Sin datos aún.</p>}
+        {bars.length > 0 ? (
+          <CandleChart bars={bars} showTime={isIntraday} />
+        ) : (
+          <p className="muted">
+            Sin datos para esta vista.
+            {isIntraday && ' Si el intradía aún no se ha descargado, usa "Actualizar datos".'}
+          </p>
+        )}
       </div>
 
       <h2>Datasets</h2>
@@ -206,7 +273,7 @@ export default function Data() {
           <thead>
             <tr>
               <th>Símbolo</th>
-              <th>Ticker Yahoo</th>
+              <th>Fuente</th>
               <th>Filas</th>
               <th>Rango</th>
               <th>Actualizado</th>

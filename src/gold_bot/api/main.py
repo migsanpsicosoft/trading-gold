@@ -21,6 +21,12 @@ from gold_bot.api.data import router as data_router
 from gold_bot.config import PROJECT_ROOT, settings
 from gold_bot.data.db import connect
 from gold_bot.data.download import is_stale, update_all
+from gold_bot.data.intraday import (
+    INTRADAY_SYMBOLS,
+    has_intraday_data,
+    meta_key,
+    update_intraday,
+)
 from gold_bot.utils.log import get_logger
 
 log = get_logger(__name__)
@@ -31,14 +37,21 @@ def _refresh_if_stale() -> None:
 
     Corre en un hilo aparte para no bloquear el arranque del servidor:
     el dashboard abre al instante y los datos llegan segundos después.
+
+    El intradía solo se MANTIENE aquí (incremental de días): el backfill
+    inicial de años nunca se dispara solo al arrancar — es una acción
+    explícita (botón del dashboard o scripts/backfill).
     """
     conn = connect()
     try:
         if is_stale(conn):
-            log.info("datos_desactualizados_refrescando")
+            log.info("datos_diarios_desactualizados_refrescando")
             update_all(conn)
-        else:
-            log.info("datos_al_dia")
+        for symbol in INTRADAY_SYMBOLS:
+            if has_intraday_data(conn, symbol) and is_stale(conn, [meta_key(symbol)]):
+                log.info("intradia_desactualizado_refrescando", symbol=symbol)
+                update_intraday(conn, symbol)
+        log.info("datos_al_dia")
     except Exception as exc:  # sin red no tiramos el server: datos viejos > no datos
         log.error("fallo_auto_actualizacion", error=str(exc))
     finally:
