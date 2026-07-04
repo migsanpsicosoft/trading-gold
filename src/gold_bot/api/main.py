@@ -15,6 +15,8 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from gold_bot import __version__
 from gold_bot.api.data import router as data_router
@@ -78,6 +80,23 @@ app.include_router(meta_router)
 app.include_router(risk_router)
 app.include_router(ensemble_router)
 app.include_router(live_router)
+
+# En producción (servidor) el backend sirve también el frontend compilado:
+# un solo servicio en el puerto 8100. En desarrollo (npm run dev) este
+# bloque no actúa si no existe frontend/dist.
+_DIST = PROJECT_ROOT / "frontend" / "dist"
+if _DIST.exists():
+    app.mount("/assets", StaticFiles(directory=_DIST / "assets"), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def spa_fallback(full_path: str):
+        if full_path.startswith("api/"):
+            raise HTTPException(status_code=404)
+        candidate = _DIST / full_path
+        if full_path and candidate.is_file():
+            return FileResponse(candidate)
+        return FileResponse(_DIST / "index.html")
+
 
 # Módulos que el sistema tendrá cuando esté completo; el endpoint de
 # estado comprueba cuáles existen ya en el filesystem (nada inventado).
