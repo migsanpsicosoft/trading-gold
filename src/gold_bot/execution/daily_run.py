@@ -24,7 +24,10 @@ from gold_bot.data.db import connect
 from gold_bot.data.download import update_all
 from gold_bot.data.intraday import INTRADAY_SYMBOLS, has_intraday_data, update_intraday
 from gold_bot.execution.broker import BrokerState, OandaBroker
+from gold_bot.execution.notify import format_daily_report, send_telegram
 from gold_bot.meta_model.pipeline import load_meta_inputs
+from gold_bot.regime.hmm import REGIME_LABELS
+from gold_bot.risk.gating import current_gate_report
 from gold_bot.risk.portfolio import build_portfolio
 from gold_bot.utils.log import get_logger
 
@@ -95,10 +98,33 @@ def run(dry_run: bool = False) -> dict:
     finally:
         conn.close()
 
-    return {"signal_date": signal_date, "exposure": exposure,
-            "target_units": target, "order_units": order, "dry_run": dry_run}
+    result = {"signal_date": signal_date, "exposure": exposure,
+              "target_units": target, "order_units": order, "dry_run": dry_run}
+
+    # 6) informe por Telegram
+    regime_now = int(inputs.regimes["regime"].iloc[-1])
+    nets = dict(inputs.daily_net)
+    for name, (_pos, net_daily) in inputs.intraday_results.items():
+        nets[name] = net_daily
+    gates = current_gate_report(nets, inputs.regimes["regime"])
+    send_telegram(format_daily_report(
+        result, balance=state.balance, currency=state.currency,
+        regime_label=REGIME_LABELS[regime_now],
+        gates_on=sum(g["gate_on"] for g in gates), gates_total=len(gates),
+        brake=float(portfolio["brake"].iloc[-1]),
+    ))
+    return result
+
+
+def main() -> None:
+    """Entrada del cron: cualquier excepción se avisa por Telegram."""
+    try:
+        print(run(dry_run="--dry-run" in sys.argv))
+    except Exception as exc:
+        log.error("runner_fallo", error=str(exc))
+        send_telegram(f"🚨 <b>gold-bot: el runner diario FALLÓ</b>\n<code>{exc}</code>")
+        raise
 
 
 if __name__ == "__main__":
-    result = run(dry_run="--dry-run" in sys.argv)
-    print(result)
+    main()

@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     oanda_account_id: str = ""
     oanda_practice: bool = True  # False = dinero real (Fase 8, ni se te ocurra aún)
 
+    # Telegram (informe diario del runner + alertas de error)
+    telegram_bot_token: str = ""
+    telegram_chat_id: str = ""
+
     @property
     def raw_dir(self) -> Path:
         return self.data_dir / "raw"
