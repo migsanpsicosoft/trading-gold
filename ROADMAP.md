@@ -76,9 +76,12 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 
 ## Fase 7 — Paper trading
 - [x] Simulador de cuenta (dry-run del ejecutor): órdenes discretas en oz, balance EUR, EURUSD diario, costes por orden. 2025 con 5.000€: +11.3% (DD −7.5%, 162 órdenes, 43€ de costes)
-- [ ] Broker demo (MT5 u OANDA)
-- [ ] Loop diario automático (señales al cierre → órdenes demo)
-- [ ] Tracking live vs backtest
+- [x] Broker elegido: OANDA practice (unidades de 1 oz — demo con 50k€ recomendada; el efecto 5k€ está cuantificado por el simulador)
+- [x] Conector OANDA v20 (estado de cuenta, posición, orden a mercado)
+- [x] Runner diario (`python -m gold_bot.execution.daily_run [--dry-run]`): datos → exposición → orden por diferencia → live_log
+- [x] Página "Live": tracking live vs backtest + registro de ejecuciones
+- [ ] Miguel: cuenta OANDA practice + credenciales en .env + primer dry-run
+- [ ] Tarea programada nocturna (schtasks — comando en README)
 - [ ] Mínimo 3 meses de paper trading
 
 ## Fase 8 — Dinero real pequeño

@@ -29,6 +29,11 @@ class Settings(BaseSettings):
     # Nivel de logging (DEBUG, INFO, WARNING...)
     log_level: str = "INFO"
 
+    # Broker OANDA (Fase 7) — credenciales SOLO en .env, nunca en código
+    oanda_api_key: str = ""
+    oanda_account_id: str = ""
+    oanda_practice: bool = True  # False = dinero real (Fase 8, ni se te ocurra aún)
+
     @property
     def raw_dir(self) -> Path:
         return self.data_dir / "raw"

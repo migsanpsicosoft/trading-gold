@@ -69,6 +69,24 @@ npm run dev
 └── pyproject.toml
 ```
 
+## Fase 7 — Paper trading (OANDA practice)
+
+1. Cuenta demo en oanda.com (fxTrade Practice, balance recomendado 50.000€).
+2. API key + Account ID → `.env` (ver `.env.example`).
+3. Prueba sin operar: `python -m gold_bot.execution.daily_run --dry-run`
+4. Programar la ejecución nocturna (00:15, tras el cierre de NY), desde
+   PowerShell como administrador:
+
+```powershell
+schtasks /Create /TN "gold-bot-daily" /SC DAILY /ST 00:15 `
+  /TR "C:\Users\msn95\Desktop\proyectos\trader\.venv\Scripts\python.exe -m gold_bot.execution.daily_run" `
+  /RU "$env:USERNAME"
+```
+
+Cada ejecución queda en la tabla `live_log`; la página **Live** del
+dashboard compara la cuenta real contra el backtest teórico desde el
+primer día — esa divergencia es la métrica de la fase.
+
 ## Comandos útiles
 
 ```powershell

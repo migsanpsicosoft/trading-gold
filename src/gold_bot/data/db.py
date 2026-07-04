@@ -35,6 +35,20 @@ CREATE TABLE IF NOT EXISTS dataset_meta (
     content_hash TEXT       -- sha256 del contenido de bars para ese símbolo
 );
 
+-- Registro del runner diario de paper trading (Fase 7): una fila por
+-- ejecución con la decisión completa — auditoría y tracking live.
+CREATE TABLE IF NOT EXISTS live_log (
+    ts           TEXT PRIMARY KEY,  -- ISO datetime UTC de la ejecución
+    exposure     REAL,              -- fracción objetivo decidida por el sistema
+    price        REAL,              -- mid XAU_USD en el momento
+    balance      REAL,              -- balance de la cuenta
+    currency     TEXT,
+    held_units   REAL,              -- posición antes de operar
+    target_units REAL,
+    order_units  REAL,              -- 0 si no se ordenó nada
+    dry_run      INTEGER NOT NULL DEFAULT 0
+);
+
 -- Barras intradía (15m) con BID y ASK en la misma fila: el spread real
 -- de cada barra es ask_close - bid_close, sin joins. El volumen es
 -- "tick volume" (nº de cambios de precio), no volumen negociado real:

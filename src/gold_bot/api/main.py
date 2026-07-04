@@ -19,6 +19,7 @@ from fastapi import FastAPI, HTTPException
 from gold_bot import __version__
 from gold_bot.api.data import router as data_router
 from gold_bot.api.ensemble import router as ensemble_router
+from gold_bot.api.live import router as live_router
 from gold_bot.api.meta import router as meta_router
 from gold_bot.api.regime import router as regime_router
 from gold_bot.api.risk import router as risk_router
@@ -76,6 +77,7 @@ app.include_router(regime_router)
 app.include_router(meta_router)
 app.include_router(risk_router)
 app.include_router(ensemble_router)
+app.include_router(live_router)
 
 # Módulos que el sistema tendrá cuando esté completo; el endpoint de
 # estado comprueba cuáles existen ya en el filesystem (nada inventado).

@@ -6,6 +6,7 @@ import Strategies from './pages/Strategies'
 import Regime from './pages/Regime'
 import Meta from './pages/Meta'
 import Risk from './pages/Risk'
+import Live from './pages/Live'
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
         <NavLink to="/regime">Régimen</NavLink>
         <NavLink to="/meta">Meta-modelo</NavLink>
         <NavLink to="/risk">Riesgo</NavLink>
+        <NavLink to="/live">Live</NavLink>
       </nav>
       <Routes>
         <Route path="/" element={<Home />} />
@@ -30,6 +32,7 @@ export default function App() {
         <Route path="/regime" element={<Regime />} />
         <Route path="/meta" element={<Meta />} />
         <Route path="/risk" element={<Risk />} />
+        <Route path="/live" element={<Live />} />
       </Routes>
     </>
   )
