@@ -20,6 +20,7 @@ from gold_bot import __version__
 from gold_bot.api.data import router as data_router
 from gold_bot.api.meta import router as meta_router
 from gold_bot.api.regime import router as regime_router
+from gold_bot.api.risk import router as risk_router
 from gold_bot.api.strategies import router as strategies_router
 from gold_bot.config import PROJECT_ROOT, settings
 from gold_bot.data.db import connect
@@ -72,6 +73,7 @@ app.include_router(data_router)
 app.include_router(strategies_router)
 app.include_router(regime_router)
 app.include_router(meta_router)
+app.include_router(risk_router)
 
 # Módulos que el sistema tendrá cuando esté completo; el endpoint de
 # estado comprueba cuáles existen ya en el filesystem (nada inventado).

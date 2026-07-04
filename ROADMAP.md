@@ -53,11 +53,13 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 - [x] XGBoost walk-forward + estudio ventana×reentreno (6 configs simuladas)
 - [x] Vista "Meta-modelo" (AUC, uplift, importancia, decisiones)
 - [x] Resultado honesto: AUC ~0.51-0.52 en labels v1 (barrier) y v2 (PnL propio) — sin skill accionable a nivel de señal individual
-- [ ] Decidir con Miguel el uso del edge débil: sizing continuo vs gating adaptativo por régimen vs congelar meta
+- [x] Decisión de Miguel: gating adaptativo por régimen (implementado en Fase 5); el meta XGBoost queda congelado con su infraestructura lista
 - [ ] SHAP (pendiente de que haya un modelo con skill que explicar)
 
 ## Fase 5 — Gestor de riesgo
-- [ ] Sizing por volatilidad (ATR)
+- [x] Gating adaptativo por régimen (Sharpe móvil 250d en-régimen, walk-forward): ensemble OOS 0.26→0.62, DD -14.5%→-7.8%
+- [x] Página "Riesgo" (equity crudo vs gated, gates actuales)
+- [ ] Sizing por volatilidad (ATR / vol targeting)
 - [ ] Risk parity entre estrategias
 - [ ] Límites duros (DD máximo, exposición máxima)
 - [ ] Vista de exposición y stress tests
