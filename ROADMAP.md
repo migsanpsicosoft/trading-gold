@@ -59,10 +59,12 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 ## Fase 5 — Gestor de riesgo
 - [x] Gating adaptativo por régimen (Sharpe móvil 250d en-régimen, walk-forward): ensemble OOS 0.26→0.62, DD -14.5%→-7.8%
 - [x] Página "Riesgo" (equity crudo vs gated, gates actuales)
-- [ ] Sizing por volatilidad (ATR / vol targeting)
-- [ ] Risk parity entre estrategias
-- [ ] Límites duros (DD máximo, exposición máxima)
-- [ ] Vista de exposición y stress tests
+- [x] Risk parity entre estrategias (1/vol 60d, shift 1) — OOS 0.62→0.70
+- [x] Vol targeting 10% anual (vol 20d, tope 2×) con netting de las diarias en una posición
+- [x] Freno de drawdown -6%/-12% contra pico móvil 1 año (rehabilitable) — cartera final OOS Sharpe 0.80, CAGR 8.2%, DD -14.6%
+- [x] Config B de riesgo aprobada por Miguel (vol 10% + freno -6/-12)
+- [x] Vista de cartera por capas, apalancamiento, freno y exposición actual
+- [ ] Stress tests (pendiente, con el walk-forward final de Fase 6)
 
 ## Fase 6 — Ensemble completo
 - [ ] Backtest walk-forward integrado con costes realistas

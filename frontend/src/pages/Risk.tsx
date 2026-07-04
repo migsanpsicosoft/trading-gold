@@ -21,18 +21,31 @@ interface RiskResponse {
   metrics: {
     raw_oos: Metrics
     gated_oos: Metrics
-    raw_full: Metrics
-    gated_full: Metrics
+    parity_oos: Metrics
+    final_oos: Metrics
   }
   equity_raw: Point[]
   equity_gated: Point[]
+  equity_final: Point[]
   gates_now: GateNow[]
+  weights_now: Record<string, number>
   gate_on_pct: Record<string, number>
+  current_leverage: number
+  current_brake: number
+  current_exposure: number
 }
 
 const REGIME_LABELS = ['calma', 'transición', 'turbulencia']
 
-function EquityCompareChart({ raw, gated }: { raw: Point[]; gated: Point[] }) {
+function EquityCompareChart({
+  raw,
+  gated,
+  final,
+}: {
+  raw: Point[]
+  gated: Point[]
+  final: Point[]
+}) {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -44,23 +57,21 @@ function EquityCompareChart({ raw, gated }: { raw: Point[]; gated: Point[] }) {
       timeScale: { borderColor: '#30363d' },
       rightPriceScale: { borderColor: '#30363d', mode: 1 },
     })
-    const rawSeries = chart.addSeries(LineSeries, {
-      color: '#8b949e',
-      lineWidth: 1,
-      priceLineVisible: false,
-    })
-    rawSeries.setData(raw.map((p) => ({ time: p.time as UTCTimestamp, value: p.value })))
-    const gatedSeries = chart.addSeries(LineSeries, {
-      color: '#d4a017',
-      lineWidth: 2,
-      priceLineVisible: false,
-    })
-    gatedSeries.setData(
-      gated.map((p) => ({ time: p.time as UTCTimestamp, value: p.value })),
-    )
+    const mk = (data: Point[], color: string, width: 1 | 2) => {
+      const s = chart.addSeries(LineSeries, {
+        color,
+        lineWidth: width,
+        priceLineVisible: false,
+        lastValueVisible: false,
+      })
+      s.setData(data.map((p) => ({ time: p.time as UTCTimestamp, value: p.value })))
+    }
+    mk(raw, '#8b949e', 1)
+    mk(gated, '#58a6ff', 1)
+    mk(final, '#d4a017', 2)
     chart.timeScale().fitContent()
     return () => chart.remove()
-  }, [raw, gated])
+  }, [raw, gated, final])
 
   return <div ref={ref} className="chart" />
 }
@@ -97,36 +108,39 @@ export default function Risk() {
     )
   }
 
-  const { raw_oos, gated_oos } = data.metrics
+  const { raw_oos, gated_oos, parity_oos, final_oos } = data.metrics
   const currentRegime = data.gates_now[0]?.regime
+
+  const layer = (label: string, m: Metrics, highlight = false) => (
+    <div className={`card metric ${highlight ? 'metric-highlight' : ''}`}>
+      <span className="metric-label">{label}</span>
+      <span className="metric-value">Sharpe {fmt(m.sharpe)}</span>
+      <span className="muted small">
+        CAGR {fmt(m.cagr, 1, true)} · DD {fmt(m.max_drawdown, 1, true)} · vol{' '}
+        {fmt(m.vol, 1, true)}
+      </span>
+    </div>
+  )
 
   return (
     <div className="container wide">
       <header>
-        <h1>Riesgo — ensemble con gating por régimen</h1>
+        <h1>Riesgo — cartera por capas</h1>
         <p className="muted">
-          Cada estrategia se enciende/apaga según su Sharpe móvil en el régimen
-          actual (250 días en-régimen, aprendido walk-forward) · 1/N; el sizing
-          por volatilidad y risk parity llegan en los próximos pasos
+          gating por régimen → risk parity (1/vol 60d) → vol targeting 10% (tope
+          2×) → freno de drawdown −6%/−12% (pico móvil 1 año) · config B
+          aprobada
         </p>
       </header>
 
       <div className="metrics">
-        <div className="card metric">
-          <span className="metric-label">Ensemble crudo (OOS)</span>
-          <span className="metric-value">Sharpe {fmt(raw_oos.sharpe)}</span>
-          <span className="muted small">
-            CAGR {fmt(raw_oos.cagr, 1, true)} · DD {fmt(raw_oos.max_drawdown, 1, true)}
-          </span>
-        </div>
-        <div className="card metric metric-highlight">
-          <span className="metric-label">Ensemble con gating (OOS)</span>
-          <span className="metric-value">Sharpe {fmt(gated_oos.sharpe)}</span>
-          <span className="muted small">
-            CAGR {fmt(gated_oos.cagr, 1, true)} · DD{' '}
-            {fmt(gated_oos.max_drawdown, 1, true)}
-          </span>
-        </div>
+        {layer('1. Ensemble crudo 1/N (OOS)', raw_oos)}
+        {layer('2. + gating por régimen (OOS)', gated_oos)}
+        {layer('3. + risk parity (OOS)', parity_oos)}
+        {layer('4. + vol target y freno (OOS)', final_oos, true)}
+      </div>
+
+      <div className="metrics">
         <div className="card metric">
           <span className="metric-label">Régimen actual</span>
           <span className="metric-value">
@@ -137,14 +151,32 @@ export default function Risk() {
             {data.gates_now.length} estrategias activas
           </span>
         </div>
+        <div className="card metric">
+          <span className="metric-label">Apalancamiento hoy</span>
+          <span className="metric-value">{data.current_leverage}×</span>
+          <span className="muted small">freno: ×{data.current_brake}</span>
+        </div>
+        <div className="card metric">
+          <span className="metric-label">Exposición neta XAU hoy</span>
+          <span className="metric-value">{data.current_exposure}</span>
+          <span className="muted small">
+            positivo largo · negativo corto · 0 en cash
+          </span>
+        </div>
       </div>
 
-      <h2>Equity del ensemble — gris: crudo 1/N · dorado: con gating</h2>
+      <h2>
+        Equity — gris: crudo · azul: gating 1/N · dorado: cartera completa
+      </h2>
       <div className="card chart-card">
-        <EquityCompareChart raw={data.equity_raw} gated={data.equity_gated} />
+        <EquityCompareChart
+          raw={data.equity_raw}
+          gated={data.equity_gated}
+          final={data.equity_final}
+        />
       </div>
 
-      <h2>Gates ahora mismo (régimen: {REGIME_LABELS[currentRegime] ?? '—'})</h2>
+      <h2>Gates y pesos ahora mismo (régimen: {REGIME_LABELS[currentRegime] ?? '—'})</h2>
       <div className="card">
         <table className="table">
           <thead>
@@ -152,6 +184,7 @@ export default function Risk() {
               <th>Estrategia</th>
               <th>Sharpe en este régimen (250d)</th>
               <th>Gate</th>
+              <th>Peso risk parity</th>
               <th>% tiempo ON (desde 2012)</th>
             </tr>
           </thead>
@@ -163,6 +196,11 @@ export default function Risk() {
                 </td>
                 <td>{fmt(g.cond_sharpe)}</td>
                 <td>{g.gate_on ? '🟢 activa' : '🔴 apagada'}</td>
+                <td>
+                  {data.weights_now[g.strategy] != null
+                    ? `${(data.weights_now[g.strategy] * 100).toFixed(1)}%`
+                    : '—'}
+                </td>
                 <td>
                   {data.gate_on_pct[g.strategy] != null
                     ? `${(data.gate_on_pct[g.strategy] * 100).toFixed(0)}%`
