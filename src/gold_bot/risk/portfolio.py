@@ -146,12 +146,13 @@ def build_portfolio(inputs: MetaInputs,
     final_daily = run_backtest(
         inputs.bars, combined_daily_pos * lev_daily, spread_usd=spread
     )
-    final_ret = final_daily.net_returns.reindex(idx).fillna(0.0)
+    intraday_contrib = pd.Series(0.0, index=idx)
     for name, (_pos, net_daily) in inputs.intraday_results.items():
         w = weights[name].shift(1) * leverage.shift(1)
-        final_ret = final_ret.add(
+        intraday_contrib = intraday_contrib.add(
             (net_daily.reindex(idx) * w.reindex(idx)).fillna(0.0), fill_value=0.0
         )
+    final_ret = final_daily.net_returns.reindex(idx).fillna(0.0) + intraday_contrib
 
     # --- capa límites duros: freno de drawdown
     braked_ret, brake_mult = drawdown_brake(final_ret)
@@ -160,6 +161,7 @@ def build_portfolio(inputs: MetaInputs,
         "parity_returns": parity_ret,
         "final_returns": braked_ret,
         "unbraked_returns": final_ret,
+        "intraday_contrib": intraday_contrib,
         "weights": weights,
         "leverage": leverage,
         "brake": brake_mult,

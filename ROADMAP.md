@@ -75,7 +75,10 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 - [x] Resultado vs objetivo: Sharpe OOS 0.80 (objetivo 1.2–1.8: NO alcanzado aún), DD −14.6% (< 15%: cumplido). El DSR conservador exige más evidencia OOS → paper trading
 
 ## Fase 7 — Paper trading
+- [x] Simulador de cuenta (dry-run del ejecutor): órdenes discretas en oz, balance EUR, EURUSD diario, costes por orden. 2025 con 5.000€: +11.3% (DD −7.5%, 162 órdenes, 43€ de costes)
 - [ ] Broker demo (MT5 u OANDA)
+- [ ] Loop diario automático (señales al cierre → órdenes demo)
+- [ ] Tracking live vs backtest
 - [ ] Mínimo 3 meses de paper trading
 
 ## Fase 8 — Dinero real pequeño
