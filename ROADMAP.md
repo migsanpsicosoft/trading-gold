@@ -14,11 +14,13 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 - [ ] Entorno levantado y validado en la máquina de Miguel
 
 ## Fase 1 — Datos
-- [ ] Decidir fuente de datos diarios (XAU, XAG, DXY, US10Y, TIP)
+- [x] Fuente de datos diarios: yfinance (GC=F, SI=F, DX-Y.NYB, ^TNX, TIP)
+- [x] Pipeline incremental (SQLite, solape 7d, hash por dataset)
+- [x] Auto-actualización: al arrancar el backend si los datos tienen >24h + botón manual
+- [x] Página "Data explorer" (velas TradingView + volumen + estado de datasets)
 - [ ] Decidir fuente de datos intradía (necesaria para VWAP y vol breakout)
-- [ ] Pipeline de descarga con almacenamiento local + hash de datasets
 - [ ] Features técnicas base
-- [ ] Página "Data explorer" en el dashboard
+- [ ] Validado por Miguel
 
 ## Fase 2 — Estrategias base
 - [ ] Definir la 8ª estrategia (solo hay 7 listadas)

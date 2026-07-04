@@ -10,17 +10,49 @@ Puerto 8100 (no 8000) porque el backend de comerc-IA-l ya usa el 8000.
 """
 
 import re
+import threading
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 
 from gold_bot import __version__
+from gold_bot.api.data import router as data_router
 from gold_bot.config import PROJECT_ROOT, settings
+from gold_bot.data.db import connect
+from gold_bot.data.download import is_stale, update_all
 from gold_bot.utils.log import get_logger
 
 log = get_logger(__name__)
 
-app = FastAPI(title="Gold Hybrid Bot API", version=__version__)
+
+def _refresh_if_stale() -> None:
+    """Auto-actualización: si los datos tienen >24h, descarga lo que falte.
+
+    Corre en un hilo aparte para no bloquear el arranque del servidor:
+    el dashboard abre al instante y los datos llegan segundos después.
+    """
+    conn = connect()
+    try:
+        if is_stale(conn):
+            log.info("datos_desactualizados_refrescando")
+            update_all(conn)
+        else:
+            log.info("datos_al_dia")
+    except Exception as exc:  # sin red no tiramos el server: datos viejos > no datos
+        log.error("fallo_auto_actualizacion", error=str(exc))
+    finally:
+        conn.close()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    threading.Thread(target=_refresh_if_stale, daemon=True).start()
+    yield
+
+
+app = FastAPI(title="Gold Hybrid Bot API", version=__version__, lifespan=lifespan)
+app.include_router(data_router)
 
 # Módulos que el sistema tendrá cuando esté completo; el endpoint de
 # estado comprueba cuáles existen ya en el filesystem (nada inventado).
