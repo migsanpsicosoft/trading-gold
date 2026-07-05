@@ -83,8 +83,10 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 - [x] Informe diario por Telegram + alertas de error del runner
 - [x] Desplegado en EC2 (Ubuntu 24.04): systemd `gold-bot-dashboard` (127.0.0.1:8100, acceso por túnel SSH), cron lun-vie 23:05 UTC, swap 2G, DB transferida
 - [x] Runner validado en servidor de punta a punta (falla limpio solo en credenciales)
-- [ ] Miguel: OANDA practice + bot de Telegram → credenciales al `.env` DEL SERVIDOR + dry-run
-- [ ] Mínimo 3 meses de paper trading
+- [x] Paper broker INTERNO (sin broker externo ni KYC): cuenta virtual 50k€, fills al spread real, mark-to-market — OANDA quedó descartado (no disponible en España) y el interno mide lo mismo con más control
+- [x] PAPER TRADING INICIADO 2026-07-05: primera orden real ejecutada (corto 1 oz @ 4187, exposición −7.1% con freno activo); sombras multi_full y top10 registrando
+- [ ] Miguel: bot de Telegram (@BotFather, 3 min, sin KYC) → token y chat_id al .env del servidor para recibir los informes
+- [ ] Mínimo 3 meses de paper trading (hasta ~2026-10-05)
 
 ## Expansión multi-activo (research 2026-07-05)
 - [x] Universo de 9 activos: datos diarios (2005→) + intradía 15m bid/ask (2019→, oro 2015→) — ~1.7M barras, integridad verificada
