@@ -91,7 +91,9 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 - [x] Libro por activo (estrategias universales + HMM propio + gating + parity) y cartera global con gate por libro
 - [x] Resultado honesto: libros nuevos sin edge suficiente (JPY 0.25, NG 0.23, resto ~0 o negativo); correlación entre libros ~0.00 (diversificación perfecta pero sin edge que diversificar). Combinado 0.24 < oro solo 0.70 → NO desplegado
 - [x] Página "Multi-activo" con los números completos
-- [ ] Research futuro: estrategias específicas por familia (p. ej. mean reversion salió positiva en 7 de 9 activos — hipótesis a priori para una v2 con validación propia)
+- [x] v2: estrategias personalizadas por activo, pre-registradas en docs/estrategias_v2.md (TSMOM 12-1, reversión 5d, estacionalidad mensual adaptativa, overnight SPX, yen refugio)
+- [x] Resultado v2 honesto: combinado 0.24→0.34, sigue < 0.70 del oro → NO desplegado para operar. Ganadores: monthly_seasonality (positiva en 7/8, USB 0.73, SPX 0.58) y TSMOM en financieros (JPY 0.40, SPX 0.34); muertos con honor: overnight_equity (−3.06, costes — el precedente NightShares se confirmó) y TSMOM en WTI (−0.75)
+- [ ] Research futuro (requiere DATOS nuevos, no más curve-fitting): term structure de futuros (carry), posicionamiento COT, diferenciales de tipos para FX carry
 
 ## Fase 7bis — Operación y monitorización (2026-07-05)
 - [x] Informe diario de Telegram con TODAS las señales por estrategia

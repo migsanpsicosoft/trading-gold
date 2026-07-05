@@ -23,16 +23,22 @@ from scipy.stats import norm
 TRADING_DAYS = 252
 EULER_GAMMA = 0.5772156649
 
-# Registro honesto de intentos del proyecto (2026-07-04):
-#   8 estrategias construidas + 12 configuraciones del meta-modelo
-#   (2 labels × 6 grids) + 3 configs de riesgo + 1 gating = 24
-N_TRIALS = 24
+# Registro honesto de intentos del proyecto:
+#   2026-07-04: 8 estrategias + 12 configs meta (2 labels × 6 grids)
+#     + 3 configs de riesgo + 1 gating = 24
+#   2026-07-05: expansión multi-activo: 8 libros v1 + 2 combinados v1
+#     + 8 libros v2 (estrategias personalizadas) + 1 combinado v2 = +19
+N_TRIALS = 43
 
 # Sharpe anual OOS de los intentos medidos a nivel cartera/estrategia —
 # su dispersión estima la varianza entre intentos que exige la fórmula
 TRIAL_SHARPES_ANNUAL = [
-    0.40, 0.28, -0.04, -0.15, 0.19, -0.14, -1.54, -0.14,  # 8 estrategias
+    0.40, 0.28, -0.04, -0.15, 0.19, -0.14, -1.54, -0.14,  # 8 estrategias oro
     0.29, 0.26, 0.62, 0.70, 0.74, 0.76, 0.77, 0.80, 0.21,  # ensembles/configs
+    0.02, -0.05, -0.07, -0.18, 0.25, 0.03, 0.23, -0.30,   # libros v1 no-oro
+    0.22, 0.24,                                            # combinados v1
+    -0.11, -0.27, -0.72, 0.22, 0.01, 0.17, 0.21, 0.12,    # libros v2 no-oro
+    0.34,                                                  # combinado v2
 ]
 
 

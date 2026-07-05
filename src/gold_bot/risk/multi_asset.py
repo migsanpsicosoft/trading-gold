@@ -35,18 +35,33 @@ from gold_bot.risk.portfolio import (
 )
 from gold_bot.strategies import INTRADAY_STRATEGIES, STRATEGIES
 from gold_bot.strategies.base import IntradayData, StrategyData
-from gold_bot.strategies.breakout import Breakout
 from gold_bot.strategies.mean_reversion import MeanReversion
-from gold_bot.strategies.trend_following import TrendFollowing
-from gold_bot.strategies.vol_breakout import VolBreakout
+from gold_bot.strategies.monthly_seasonality import MonthlySeasonality
+from gold_bot.strategies.overnight_equity import OvernightEquity
+from gold_bot.strategies.risk_off_jpy import RiskOffJPY
+from gold_bot.strategies.st_reversal import ShortTermReversal
+from gold_bot.strategies.ts_momentum import TSMomentum
 from gold_bot.utils.log import get_logger
 
 log = get_logger(__name__)
 
 
-def universal_daily_strategies() -> list:
-    """Estrategias válidas en cualquier activo (instancias frescas)."""
-    return [TrendFollowing(), Breakout(), MeanReversion()]
+def strategies_for_asset(key: str) -> tuple[list, list]:
+    """Asignación de estrategias por activo — pre-registrada en
+    docs/estrategias_v2.md ANTES de evaluar (v2, 2026-07-05).
+
+    No-oro: TSMOM 12-1 (MOP 2012) + reversión 5d + Bollinger +
+    estacionalidad mensual adaptativa. Especiales: OvernightEquity
+    (solo SPX, intradía) y RiskOffJPY (solo JPY). Fuera trend 50/200 y
+    breakout (TSMOM cubre su horizonte documentado) y vol_breakout
+    (costes medidos lo matan fuera del oro).
+    """
+    daily = [TSMomentum(), ShortTermReversal(), MeanReversion(),
+             MonthlySeasonality()]
+    if key == "JPY":
+        daily.append(RiskOffJPY())
+    intraday = [OvernightEquity()] if key == "SPX" else []
+    return daily, intraday
 
 
 @dataclass
@@ -80,6 +95,12 @@ def build_asset_book(key: str) -> AssetBook:
             intraday_mid = (load_intraday_mid(conn, key)
                             if has_intraday_data(conn, key) else None)
             features = compute_asset_features(bars, intraday_mid)
+            if key == "JPY":
+                # feature cross-asset del libro JPY (yen refugio):
+                # momentum 60d del S&P alineado a su calendario
+                spx_close = load_bars(conn, "SPX")["close"]
+                spx_mom = (spx_close / spx_close.shift(60) - 1)
+                features["spx_ret_60d"] = spx_mom.reindex(bars.index).ffill()
         bars15 = (load_intraday_ohlc(conn, key)
                   if has_intraday_data(conn, key) else pd.DataFrame())
     finally:
@@ -89,8 +110,9 @@ def build_asset_book(key: str) -> AssetBook:
     data = StrategyData(bars=bars, features=features)
     spread = features.get("spread_mean")
 
+    v2_daily, v2_intraday = strategies_for_asset(key)
     daily_strats = (list(STRATEGIES.values()) if config.full_book
-                    else universal_daily_strategies())
+                    else v2_daily)
     positions, nets = {}, {}
     for strat in daily_strats:
         pos = strat.generate_positions(data)
@@ -101,7 +123,7 @@ def build_asset_book(key: str) -> AssetBook:
         ).net_returns
 
     intraday_strats = (list(INTRADAY_STRATEGIES.values()) if config.full_book
-                       else [VolBreakout()])
+                       else v2_intraday)
     intraday_nets = {}
     if not bars15.empty:
         for strat in intraday_strats:
