@@ -22,10 +22,12 @@ import pandas as pd
 from gold_bot.assets import TRADEABLE_ASSETS, AssetConfig
 from gold_bot.backtest.intraday import run_intraday_backtest
 from gold_bot.backtest.simple import OOS_START, compute_metrics, run_backtest
+from gold_bot.data.cot import load_cot_daily
 from gold_bot.data.db import connect
 from gold_bot.data.download import load_bars
 from gold_bot.data.features import compute_asset_features, compute_features
 from gold_bot.data.intraday import has_intraday_data, load_intraday_mid, load_intraday_ohlc
+from gold_bot.data.macro import load_macro_daily
 from gold_bot.regime.hmm import walkforward_regimes
 from gold_bot.risk.gating import gate_matrix
 from gold_bot.risk.portfolio import (
@@ -35,33 +37,90 @@ from gold_bot.risk.portfolio import (
 )
 from gold_bot.strategies import INTRADAY_STRATEGIES, STRATEGIES
 from gold_bot.strategies.base import IntradayData, StrategyData
+from gold_bot.strategies.carry import CurveCarry, FxCarry
+from gold_bot.strategies.cot_extreme import CotExtreme
 from gold_bot.strategies.mean_reversion import MeanReversion
 from gold_bot.strategies.monthly_seasonality import MonthlySeasonality
-from gold_bot.strategies.overnight_equity import OvernightEquity
 from gold_bot.strategies.risk_off_jpy import RiskOffJPY
 from gold_bot.strategies.st_reversal import ShortTermReversal
 from gold_bot.strategies.ts_momentum import TSMomentum
+from gold_bot.strategies.vix_structure import VixStructure
 from gold_bot.utils.log import get_logger
 
 log = get_logger(__name__)
 
+COT_Z_WINDOW = 756  # ~3 años de días hábiles
+
+# CRIBA por libro (2026-07-05): la MISMA regla aprobada para el oro en
+# Fase 2 — fuera solo lo que no tiene nada que rescatar (Sharpe neto
+# OOS < -0.15 medido en v3, sin valor de diversificación). Advertencia
+# registrada: el OOS ya fue consultado en v1-v3; la validez de lo que
+# quede la decide el paper trading hacia delante, no este backtest.
+CRIBA_EXCLUDED: set[tuple[str, str]] = {
+    ("XAG", "st_reversal"),      # -0.17
+    ("WTI", "ts_momentum"),      # -0.75
+    ("JPY", "mean_reversion"),   # -0.25
+    ("JPY", "cot_extreme"),      # -0.21
+    ("HG", "st_reversal"),       # -0.32
+    ("HG", "cot_extreme"),       # -0.22
+    ("NG", "cot_extreme"),       # -0.31
+}
+
 
 def strategies_for_asset(key: str) -> tuple[list, list]:
     """Asignación de estrategias por activo — pre-registrada en
-    docs/estrategias_v2.md ANTES de evaluar (v2, 2026-07-05).
+    docs/estrategias_v2.md y docs/estrategias_v3.md ANTES de evaluar.
 
-    No-oro: TSMOM 12-1 (MOP 2012) + reversión 5d + Bollinger +
-    estacionalidad mensual adaptativa. Especiales: OvernightEquity
-    (solo SPX, intradía) y RiskOffJPY (solo JPY). Fuera trend 50/200 y
-    breakout (TSMOM cubre su horizonte documentado) y vol_breakout
-    (costes medidos lo matan fuera del oro).
+    v2: TSMOM 12-1 + reversión 5d + Bollinger + estacionalidad mensual;
+    RiskOffJPY en JPY. overnight_equity retirada (muerta por costes,
+    riesgo pre-declarado en v2).
+    v3 (datos nuevos): cot_extreme en todos; fx_carry en EUR y JPY;
+    curve_carry en USB; vix_structure en SPX.
     """
     daily = [TSMomentum(), ShortTermReversal(), MeanReversion(),
-             MonthlySeasonality()]
+             MonthlySeasonality(), CotExtreme()]
     if key == "JPY":
-        daily.append(RiskOffJPY())
-    intraday = [OvernightEquity()] if key == "SPX" else []
-    return daily, intraday
+        daily += [RiskOffJPY(), FxCarry()]
+    if key == "EUR":
+        daily.append(FxCarry())
+    if key == "USB":
+        daily.append(CurveCarry())
+    if key == "SPX":
+        daily.append(VixStructure())
+    daily = [s for s in daily if (key, s.name) not in CRIBA_EXCLUDED]
+    return daily, []
+
+
+def build_extra_features(key: str, bars: pd.DataFrame, conn) -> pd.DataFrame:
+    """Features cross-fuente por activo (COT, carry, VIX). Todas con su
+    disponibilidad temporal correcta (lags y ffill de solo-pasado)."""
+    extra = pd.DataFrame(index=bars.index)
+
+    cot = load_cot_daily(conn, key, bars.index)
+    if cot.notna().any():
+        mean = cot.rolling(COT_Z_WINDOW, min_periods=COT_Z_WINDOW // 3).mean()
+        std = cot.rolling(COT_Z_WINDOW, min_periods=COT_Z_WINDOW // 3).std()
+        extra["cot_z"] = (cot - mean) / std
+
+    if key == "EUR":
+        ecb = load_macro_daily(conn, "ECB", bars.index)
+        us3m = load_macro_daily(conn, "US3M", bars.index)
+        extra["carry_diff"] = ecb - us3m
+    if key == "JPY":
+        us3m = load_macro_daily(conn, "US3M", bars.index)
+        jp = load_macro_daily(conn, "JPRATE", bars.index)
+        extra["carry_diff"] = us3m - jp
+        spx_close = load_bars(conn, "SPX")["close"]
+        extra["spx_ret_60d"] = (spx_close / spx_close.shift(60) - 1) \
+            .reindex(bars.index).ffill()
+    if key == "USB":
+        extra["curve_slope"] = load_macro_daily(conn, "T10Y2Y", bars.index)
+    if key == "SPX":
+        vix = load_bars(conn, "VIX")["close"].reindex(bars.index).ffill()
+        vix3m = load_bars(conn, "VIX3M")["close"].reindex(bars.index).ffill()
+        extra["vix_ratio"] = vix3m / vix - 1
+
+    return extra
 
 
 @dataclass
@@ -95,12 +154,7 @@ def build_asset_book(key: str) -> AssetBook:
             intraday_mid = (load_intraday_mid(conn, key)
                             if has_intraday_data(conn, key) else None)
             features = compute_asset_features(bars, intraday_mid)
-            if key == "JPY":
-                # feature cross-asset del libro JPY (yen refugio):
-                # momentum 60d del S&P alineado a su calendario
-                spx_close = load_bars(conn, "SPX")["close"]
-                spx_mom = (spx_close / spx_close.shift(60) - 1)
-                features["spx_ret_60d"] = spx_mom.reindex(bars.index).ffill()
+            features = features.join(build_extra_features(key, bars, conn))
         bars15 = (load_intraday_ohlc(conn, key)
                   if has_intraday_data(conn, key) else pd.DataFrame())
     finally:

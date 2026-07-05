@@ -136,6 +136,41 @@ def run(dry_run: bool = False) -> dict:
     return result
 
 
+def run_shadow_multi() -> None:
+    """Libro sombra multi-activo: calcula y registra las exposiciones de
+    los 9 libros SIN ordenar nada, y las manda en un mensaje aparte.
+    Es la evidencia OOS virgen que decidirá si el multi (0.51 en
+    backtest tras criba) merece capital. Un fallo aquí NUNCA debe
+    afectar al trading del oro — por eso va en su propio try."""
+    from gold_bot.risk.multi_asset import build_multi_portfolio
+
+    result = build_multi_portfolio()
+    ts = datetime.now(UTC).isoformat()
+    exposures = {}
+    conn = connect()
+    try:
+        for key, book in result["books"].items():
+            gate = float(result["book_gates"][key].iloc[-1])
+            weight = float(result["asset_weights"][key].iloc[-1])
+            lev = float(result["leverage"].iloc[-1])
+            brake = float(result["brake"].iloc[-1])
+            book_exp = float(book.net_exposure.dropna().iloc[-1]) if len(
+                book.net_exposure.dropna()) else 0.0
+            exposure = book_exp * gate * weight * lev * brake
+            exposures[key] = exposure
+            conn.execute(
+                "INSERT OR REPLACE INTO live_multi_signals (ts, asset, exposure) "
+                "VALUES (?, ?, ?)", (ts, key, exposure))
+        conn.commit()
+    finally:
+        conn.close()
+
+    lines = [f"<code>{k:4}</code> {v:+.1%}" for k, v in exposures.items()]
+    send_telegram("<b>🌐 multi-activo (libro sombra — sin órdenes)</b>\n"
+                  + "\n".join(lines))
+    log.info("sombra_multi_registrada", activos=len(exposures))
+
+
 def main() -> None:
     """Entrada del cron: cualquier excepción se avisa por Telegram."""
     try:
@@ -144,6 +179,11 @@ def main() -> None:
         log.error("runner_fallo", error=str(exc))
         send_telegram(f"🚨 <b>gold-bot: el runner diario FALLÓ</b>\n<code>{exc}</code>")
         raise
+    try:
+        run_shadow_multi()
+    except Exception as exc:  # la sombra jamás tumba al oro
+        log.error("sombra_multi_fallo", error=str(exc))
+        send_telegram(f"⚠️ libro sombra multi-activo falló: <code>{exc}</code>")
 
 
 if __name__ == "__main__":

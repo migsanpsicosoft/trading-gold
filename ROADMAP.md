@@ -93,7 +93,10 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 - [x] Página "Multi-activo" con los números completos
 - [x] v2: estrategias personalizadas por activo, pre-registradas en docs/estrategias_v2.md (TSMOM 12-1, reversión 5d, estacionalidad mensual adaptativa, overnight SPX, yen refugio)
 - [x] Resultado v2 honesto: combinado 0.24→0.34, sigue < 0.70 del oro → NO desplegado para operar. Ganadores: monthly_seasonality (positiva en 7/8, USB 0.73, SPX 0.58) y TSMOM en financieros (JPY 0.40, SPX 0.34); muertos con honor: overnight_equity (−3.06, costes — el precedente NightShares se confirmó) y TSMOM en WTI (−0.75)
-- [ ] Research futuro (requiere DATOS nuevos, no más curve-fitting): term structure de futuros (carry), posicionamiento COT, diferenciales de tipos para FX carry
+- [x] v3 con DATOS nuevos: COT (CFTC, lag de publicación correcto), carry FX/curva (FRED sin key), estructura VIX — pre-registro en docs/estrategias_v3.md
+- [x] Resultado v3: celdas con edge real (cot_extreme SPX 0.71, fx_carry JPY 0.45, vix_structure 0.45) pero combinado 0.35; con la criba de Fase 2 aplicada por libro: 0.51 — sigue < 0.70 → NO sustituye al oro (contador DSR: 53 intentos)
+- [x] Decisión: multi-activo desplegado como LIBRO SOMBRA en el paper (exposiciones registradas y en Telegram, SIN órdenes) — 3 meses de evidencia virgen decidirán
+- [ ] Research pendiente: term structure de futuros (carry de commodities — sin fuente gratuita fiable)
 
 ## Fase 7bis — Operación y monitorización (2026-07-05)
 - [x] Informe diario de Telegram con TODAS las señales por estrategia

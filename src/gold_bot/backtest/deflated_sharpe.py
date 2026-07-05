@@ -28,7 +28,9 @@ EULER_GAMMA = 0.5772156649
 #     + 3 configs de riesgo + 1 gating = 24
 #   2026-07-05: expansión multi-activo: 8 libros v1 + 2 combinados v1
 #     + 8 libros v2 (estrategias personalizadas) + 1 combinado v2 = +19
-N_TRIALS = 43
+#   2026-07-05 (v3): 8 libros v3 (COT/carry/VIX) + combinado v3
+#     + combinado post-criba = +10
+N_TRIALS = 53
 
 # Sharpe anual OOS de los intentos medidos a nivel cartera/estrategia —
 # su dispersión estima la varianza entre intentos que exige la fórmula
@@ -39,6 +41,8 @@ TRIAL_SHARPES_ANNUAL = [
     0.22, 0.24,                                            # combinados v1
     -0.11, -0.27, -0.72, 0.22, 0.01, 0.17, 0.21, 0.12,    # libros v2 no-oro
     0.34,                                                  # combinado v2
+    -0.13, -0.00, -0.84, 0.24, 0.05, 0.17, 0.13, -0.07,   # libros v3 no-oro
+    0.35, 0.51,                                            # combinados v3/criba
 ]
 
 

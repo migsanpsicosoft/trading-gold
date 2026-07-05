@@ -36,6 +36,9 @@ SYMBOLS: dict[str, tuple[str, str]] = {
     "HG": ("HG=F", "Cobre — futuros COMEX front month"),
     "NG": ("NG=F", "Gas natural — futuros NYMEX front month"),
     "USB": ("ZB=F", "T-Bond 30Y USA — futuros CBOT front month"),
+    # Series de señal (no tradeables) — v3
+    "VIX": ("^VIX", "VIX — volatilidad implícita 30d del S&P"),
+    "VIX3M": ("^VIX3M", "VIX3M — volatilidad implícita 93d del S&P"),
 }
 
 HISTORY_START = "2005-01-01"  # ~20 años: cubre varios regímenes de mercado

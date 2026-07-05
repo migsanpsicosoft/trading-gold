@@ -35,6 +35,34 @@ CREATE TABLE IF NOT EXISTS dataset_meta (
     content_hash TEXT       -- sha256 del contenido de bars para ese símbolo
 );
 
+-- Libro sombra multi-activo: exposiciones diarias registradas SIN
+-- ordenar (evidencia OOS virgen hacia delante para la tesis multi).
+CREATE TABLE IF NOT EXISTS live_multi_signals (
+    ts       TEXT NOT NULL,
+    asset    TEXT NOT NULL,
+    exposure REAL,
+    PRIMARY KEY (ts, asset)
+);
+
+-- COT (CFTC Commitments of Traders): posicionamiento semanal por activo.
+-- report_date es el "as of" (martes); la CAPA DE FEATURES aplica el
+-- lag de publicación (viernes) — aquí se guarda el dato crudo.
+CREATE TABLE IF NOT EXISTS cot (
+    symbol        TEXT NOT NULL,
+    report_date   TEXT NOT NULL,
+    net_spec      REAL,   -- (no-comerciales largos - cortos) / open interest
+    open_interest REAL,
+    PRIMARY KEY (symbol, report_date)
+);
+
+-- Series auxiliares (FRED sin API key): tipos cortos, pendiente de curva
+CREATE TABLE IF NOT EXISTS aux_series (
+    series TEXT NOT NULL,
+    date   TEXT NOT NULL,
+    value  REAL,
+    PRIMARY KEY (series, date)
+);
+
 -- Registro del runner diario de paper trading (Fase 7): una fila por
 -- ejecución con la decisión completa — auditoría y tracking live.
 CREATE TABLE IF NOT EXISTS live_log (
