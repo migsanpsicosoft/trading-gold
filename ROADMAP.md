@@ -1,4 +1,4 @@
-# ROADMAP — gold-hybrid-bot
+﻿# ROADMAP — gold-hybrid-bot
 
 Progreso vivo del proyecto. El dashboard (Home) parsea este fichero:
 mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
@@ -85,7 +85,7 @@ mantener el formato `## Fase N — Título` + checkboxes `- [ ]` / `- [x]`.
 - [x] Runner validado en servidor de punta a punta (falla limpio solo en credenciales)
 - [x] Paper broker INTERNO (sin broker externo ni KYC): cuenta virtual 50k€, fills al spread real, mark-to-market — OANDA quedó descartado (no disponible en España) y el interno mide lo mismo con más control
 - [x] PAPER TRADING INICIADO 2026-07-05: primera orden real ejecutada (corto 1 oz @ 4187, exposición −7.1% con freno activo); sombras multi_full y top10 registrando
-- [ ] Miguel: bot de Telegram (@BotFather, 3 min, sin KYC) → token y chat_id al .env del servidor para recibir los informes
+- [x] Telegram operativo: token + chat_id configurados, bot interactivo respondiendo, informes nocturnos activados (2026-07-05)
 - [ ] Mínimo 3 meses de paper trading (hasta ~2026-10-05)
 
 ## Expansión multi-activo (research 2026-07-05)
