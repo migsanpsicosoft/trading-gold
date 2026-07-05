@@ -66,6 +66,37 @@ CRIBA_EXCLUDED: set[tuple[str, str]] = {
     ("NG", "cot_extreme"),       # -0.31
 }
 
+# Cartera sombra "top10": las 10 mejores células de v2/v3 medidas en
+# OOS. ADVERTENCIA PRE-REGISTRADA: esto es selección descarada — el
+# máximo de ~45 células evaluadas. Su backtest NO es creíble por
+# construcción; existe SOLO como libro sombra para que la evidencia
+# hacia delante la juzgue. Peso igual 1/10 por célula.
+TOP_CELLS: list[tuple[str, str]] = [
+    ("USB", "monthly_seasonality"),  # 0.73
+    ("SPX", "cot_extreme"),          # 0.71
+    ("SPX", "monthly_seasonality"),  # 0.58
+    ("NG", "mean_reversion"),        # 0.53
+    ("EUR", "mean_reversion"),       # 0.47
+    ("NG", "st_reversal"),           # 0.47
+    ("JPY", "fx_carry"),             # 0.45
+    ("SPX", "vix_structure"),        # 0.45
+    ("WTI", "cot_extreme"),          # 0.42
+    ("JPY", "ts_momentum"),          # 0.40
+]
+
+
+def top_cells_exposures(books: dict) -> dict[str, float]:
+    """Exposición por activo de la cartera top10 (1/10 por célula)."""
+    exposures: dict[str, float] = {}
+    for asset, strategy in TOP_CELLS:
+        book = books.get(asset)
+        if book is None or strategy not in book.positions:
+            continue
+        pos = book.positions[strategy].dropna()
+        last = float(pos.iloc[-1]) if len(pos) else 0.0
+        exposures[asset] = exposures.get(asset, 0.0) + last / len(TOP_CELLS)
+    return exposures
+
 
 def strategies_for_asset(key: str) -> tuple[list, list]:
     """Asignación de estrategias por activo — pre-registrada en

@@ -35,13 +35,16 @@ CREATE TABLE IF NOT EXISTS dataset_meta (
     content_hash TEXT       -- sha256 del contenido de bars para ese símbolo
 );
 
--- Libro sombra multi-activo: exposiciones diarias registradas SIN
--- ordenar (evidencia OOS virgen hacia delante para la tesis multi).
-CREATE TABLE IF NOT EXISTS live_multi_signals (
+-- Libros sombra: exposiciones diarias registradas SIN ordenar
+-- (evidencia OOS virgen hacia delante). book: 'multi_full' (los 9
+-- libros con criba) y 'top10' (selección descarada de mejores células
+-- — existe PARA ser juzgada por la sombra, no porque nos la creamos).
+CREATE TABLE IF NOT EXISTS shadow_signals (
     ts       TEXT NOT NULL,
+    book     TEXT NOT NULL,
     asset    TEXT NOT NULL,
     exposure REAL,
-    PRIMARY KEY (ts, asset)
+    PRIMARY KEY (ts, book, asset)
 );
 
 -- COT (CFTC Commitments of Traders): posicionamiento semanal por activo.

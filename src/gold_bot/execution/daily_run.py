@@ -137,38 +137,51 @@ def run(dry_run: bool = False) -> dict:
 
 
 def run_shadow_multi() -> None:
-    """Libro sombra multi-activo: calcula y registra las exposiciones de
-    los 9 libros SIN ordenar nada, y las manda en un mensaje aparte.
-    Es la evidencia OOS virgen que decidirá si el multi (0.51 en
-    backtest tras criba) merece capital. Un fallo aquí NUNCA debe
-    afectar al trading del oro — por eso va en su propio try."""
-    from gold_bot.risk.multi_asset import build_multi_portfolio
+    """Libros sombra: exposiciones registradas SIN ordenar nada.
+
+    Dos carteras: 'multi_full' (los 9 libros, combinado honesto 0.51)
+    y 'top10' (selección descarada de mejores células — su backtest no
+    es creíble por construcción; la sombra existe para juzgarla con
+    evidencia virgen). Un fallo aquí NUNCA afecta al trading del oro.
+    """
+    from gold_bot.risk.multi_asset import build_multi_portfolio, top_cells_exposures
 
     result = build_multi_portfolio()
     ts = datetime.now(UTC).isoformat()
-    exposures = {}
+
+    full = {}
+    for key, book in result["books"].items():
+        gate = float(result["book_gates"][key].iloc[-1])
+        weight = float(result["asset_weights"][key].iloc[-1])
+        lev = float(result["leverage"].iloc[-1])
+        brake = float(result["brake"].iloc[-1])
+        book_exp = float(book.net_exposure.dropna().iloc[-1]) if len(
+            book.net_exposure.dropna()) else 0.0
+        full[key] = book_exp * gate * weight * lev * brake
+    top10 = top_cells_exposures(result["books"])
+
     conn = connect()
     try:
-        for key, book in result["books"].items():
-            gate = float(result["book_gates"][key].iloc[-1])
-            weight = float(result["asset_weights"][key].iloc[-1])
-            lev = float(result["leverage"].iloc[-1])
-            brake = float(result["brake"].iloc[-1])
-            book_exp = float(book.net_exposure.dropna().iloc[-1]) if len(
-                book.net_exposure.dropna()) else 0.0
-            exposure = book_exp * gate * weight * lev * brake
-            exposures[key] = exposure
-            conn.execute(
-                "INSERT OR REPLACE INTO live_multi_signals (ts, asset, exposure) "
-                "VALUES (?, ?, ?)", (ts, key, exposure))
+        for book_name, exposures in (("multi_full", full), ("top10", top10)):
+            for asset, exposure in exposures.items():
+                conn.execute(
+                    "INSERT OR REPLACE INTO shadow_signals "
+                    "(ts, book, asset, exposure) VALUES (?, ?, ?, ?)",
+                    (ts, book_name, asset, exposure))
         conn.commit()
     finally:
         conn.close()
 
-    lines = [f"<code>{k:4}</code> {v:+.1%}" for k, v in exposures.items()]
-    send_telegram("<b>🌐 multi-activo (libro sombra — sin órdenes)</b>\n"
-                  + "\n".join(lines))
-    log.info("sombra_multi_registrada", activos=len(exposures))
+    def fmt(d: dict) -> str:
+        return "\n".join(f"<code>{k:4}</code> {v:+.1%}"
+                         for k, v in sorted(d.items()) if abs(v) > 0.001) or "—"
+
+    send_telegram(
+        "<b>🌐 libros sombra (sin órdenes)</b>\n"
+        "<b>multi completo:</b>\n" + fmt(full) +
+        "\n\n<b>selección top10:</b>\n" + fmt(top10)
+    )
+    log.info("sombra_registrada", full=len(full), top10=len(top10))
 
 
 def main() -> None:
