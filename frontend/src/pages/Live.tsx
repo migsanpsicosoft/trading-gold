@@ -22,6 +22,17 @@ interface LiveResponse {
   backtest_equity: Point[]
 }
 
+interface ShadowBook {
+  days: number
+  virtual_return: number | null
+  equity: Point[]
+  latest_exposures: Record<string, number>
+}
+interface ShadowResponse {
+  books: Record<string, ShadowBook>
+  days_tracked: number
+}
+
 function TrackingChart({ live, backtest }: { live: Point[]; backtest: Point[] }) {
   const ref = useRef<HTMLDivElement>(null)
 
@@ -53,8 +64,39 @@ function TrackingChart({ live, backtest }: { live: Point[]; backtest: Point[] })
   return <div ref={ref} className="chart" />
 }
 
+function ShadowSection({ shadow }: { shadow: ShadowResponse }) {
+  const names: Record<string, string> = {
+    multi_full: 'Multi completo (9 libros, backtest 0.51)',
+    top10: 'Selección top10 (backtest no creíble — la sombra la juzga)',
+  }
+  return (
+    <>
+      <h2>Libros sombra (sin órdenes) — {shadow.days_tracked} días acumulados</h2>
+      <div className="metrics">
+        {Object.entries(shadow.books).map(([key, book]) => (
+          <div key={key} className="card metric">
+            <span className="metric-label">{names[key] ?? key}</span>
+            <span className="metric-value">
+              {book.virtual_return == null
+                ? 'acumulando…'
+                : `${(book.virtual_return * 100).toFixed(2)}% virtual`}
+            </span>
+            <span className="muted small">
+              {Object.entries(book.latest_exposures)
+                .filter(([, v]) => Math.abs(v) > 0.001)
+                .map(([a, v]) => `${a} ${(v * 100).toFixed(0)}%`)
+                .join(' · ') || 'plano'}
+            </span>
+          </div>
+        ))}
+      </div>
+    </>
+  )
+}
+
 export default function Live() {
   const [data, setData] = useState<LiveResponse | null>(null)
+  const [shadow, setShadow] = useState<ShadowResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -65,6 +107,10 @@ export default function Live() {
       })
       .then(setData)
       .catch((e) => setError(String(e)))
+    fetch('/api/shadow')
+      .then((r) => r.json())
+      .then(setShadow)
+      .catch(() => {})
   }, [])
 
   if (error) {
@@ -108,6 +154,9 @@ export default function Live() {
             </li>
           </ol>
         </div>
+        {shadow && Object.keys(shadow.books).length > 0 && (
+          <ShadowSection shadow={shadow} />
+        )}
       </div>
     )
   }
@@ -152,6 +201,10 @@ export default function Live() {
       <div className="card chart-card">
         <TrackingChart live={data.live_equity} backtest={data.backtest_equity} />
       </div>
+
+      {shadow && Object.keys(shadow.books).length > 0 && (
+        <ShadowSection shadow={shadow} />
+      )}
 
       <h2>Registro de ejecuciones</h2>
       <div className="card">
