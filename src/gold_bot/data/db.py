@@ -35,6 +35,14 @@ CREATE TABLE IF NOT EXISTS dataset_meta (
     content_hash TEXT       -- sha256 del contenido de bars para ese símbolo
 );
 
+-- Cuenta del paper broker INTERNO (sin broker externo): una sola fila.
+-- cash en EUR; la posición se valora mark-to-market con el último cierre.
+CREATE TABLE IF NOT EXISTS paper_account (
+    id         INTEGER PRIMARY KEY CHECK (id = 1),
+    cash_eur   REAL NOT NULL,
+    held_units REAL NOT NULL DEFAULT 0
+);
+
 -- Libros sombra: exposiciones diarias registradas SIN ordenar
 -- (evidencia OOS virgen hacia delante). book: 'multi_full' (los 9
 -- libros con criba) y 'top10' (selección descarada de mejores células

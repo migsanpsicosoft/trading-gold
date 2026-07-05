@@ -82,16 +82,16 @@ def _cmd_status() -> str:
 
 
 def _cmd_posiciones() -> str:
-    from gold_bot.execution.broker import OandaBroker
+    from gold_bot.execution.paper_broker import PaperBroker, get_broker
 
     try:
-        state = OandaBroker.from_settings().state()
-    except RuntimeError as exc:
-        return f"⚠️ {exc}"
+        broker = get_broker()
+        state = broker.state()
     except Exception as exc:
-        return f"🔴 error consultando OANDA: {exc}"
+        return f"🔴 error consultando el broker: {exc}"
+    modo = "paper interno" if isinstance(broker, PaperBroker) else "OANDA"
     return (
-        "<b>🥇 gold-bot /posiciones</b>\n"
+        f"<b>🥇 gold-bot posiciones ({modo})</b>\n"
         f"Balance: <b>{state.balance:,.2f} {state.currency}</b>\n"
         f"Posición XAU: <b>{state.held_units:+.0f} oz</b>\n"
         f"XAU mid: {state.mid:.2f}$ (spread {state.ask - state.bid:.2f})"

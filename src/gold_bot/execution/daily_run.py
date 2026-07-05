@@ -23,7 +23,7 @@ from datetime import UTC, datetime
 from gold_bot.data.db import connect
 from gold_bot.data.download import update_all
 from gold_bot.data.intraday import INTRADAY_SYMBOLS, has_intraday_data, update_intraday
-from gold_bot.execution.broker import BrokerState, OandaBroker
+from gold_bot.execution.broker import BrokerState
 from gold_bot.execution.notify import format_daily_report, send_telegram
 from gold_bot.meta_model.pipeline import load_meta_inputs
 from gold_bot.regime.hmm import REGIME_LABELS
@@ -71,8 +71,11 @@ def run(dry_run: bool = False) -> dict:
     exposure = float(portfolio["net_exposure"].dropna().iloc[-1])
     signal_date = portfolio["net_exposure"].dropna().index[-1].date().isoformat()
 
-    # 3) estado del broker y decisión
-    broker = OandaBroker.from_settings()
+    # 3) estado del broker y decisión (OANDA si hay credenciales;
+    #    si no, el paper broker interno — sin broker externo ni KYC)
+    from gold_bot.execution.paper_broker import get_broker
+
+    broker = get_broker()
     state = broker.state()
     target, order = decide_order(state, exposure)
     log.info("decision", fecha_senal=signal_date, exposicion=round(exposure, 4),

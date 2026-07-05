@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     telegram_bot_token: str = ""
     telegram_chat_id: str = ""
 
+    # Paper broker interno (sin broker externo ni KYC): capital virtual
+    paper_capital_eur: float = 50_000.0
+
     @property
     def raw_dir(self) -> Path:
         return self.data_dir / "raw"
