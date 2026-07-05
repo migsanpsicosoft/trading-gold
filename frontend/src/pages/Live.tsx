@@ -28,8 +28,15 @@ interface ShadowBook {
   equity: Point[]
   latest_exposures: Record<string, number>
 }
+interface ShadowCell {
+  strategy: string
+  asset: string
+  days: number
+  virtual_return: number | null
+}
 interface ShadowResponse {
   books: Record<string, ShadowBook>
+  cells: ShadowCell[]
   days_tracked: number
 }
 
@@ -90,6 +97,51 @@ function ShadowSection({ shadow }: { shadow: ShadowResponse }) {
           </div>
         ))}
       </div>
+
+      {shadow.cells.length > 0 && (
+        <>
+          <h2>Validación por estrategia (PnL virtual hacia delante)</h2>
+          <div className="card">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Estrategia</th>
+                  <th>Activo</th>
+                  <th>Días</th>
+                  <th>Retorno virtual</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...shadow.cells]
+                  .sort((a, b) => (b.virtual_return ?? -99) - (a.virtual_return ?? -99))
+                  .map((c) => (
+                    <tr key={`${c.strategy}-${c.asset}`}>
+                      <td>
+                        <code>{c.strategy}</code>
+                      </td>
+                      <td>{c.asset}</td>
+                      <td className="muted">{c.days}</td>
+                      <td
+                        style={{
+                          color:
+                            c.virtual_return == null
+                              ? undefined
+                              : c.virtual_return >= 0
+                                ? '#3fb950'
+                                : '#f85149',
+                        }}
+                      >
+                        {c.virtual_return == null
+                          ? 'acumulando…'
+                          : `${(c.virtual_return * 100).toFixed(2)}%`}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </>
   )
 }

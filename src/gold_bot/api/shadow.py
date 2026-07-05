@@ -44,8 +44,31 @@ def shadow() -> dict:
     finally:
         conn.close()
 
-    out: dict = {"books": {}, "days_tracked": 0}
+    out: dict = {"books": {}, "cells": [], "days_tracked": 0}
     for book_name, group in signals.groupby("book"):
+        # células individuales (validación por estrategia): resumen compacto
+        if book_name.startswith("cell_"):
+            strategy = book_name[5:]
+            exp = (group.sort_values("ts").groupby(["date", "asset"])["exposure"]
+                   .last().unstack().sort_index())
+            if len(exp) >= 2:
+                aligned = returns.reindex(index=exp.index, columns=exp.columns)
+                pnl = (exp.shift(1) * aligned).sum(axis=1).fillna(0.0)
+                for asset in exp.columns:
+                    cell_pnl = (exp[asset].shift(1)
+                                * aligned[asset]).fillna(0.0)
+                    out["cells"].append({
+                        "strategy": strategy,
+                        "asset": asset,
+                        "days": int(len(exp)),
+                        "virtual_return": round(float(np.exp(cell_pnl.sum()) - 1), 4),
+                    })
+            else:
+                for asset in group["asset"].unique():
+                    out["cells"].append({"strategy": strategy, "asset": asset,
+                                         "days": int(len(exp)),
+                                         "virtual_return": None})
+            continue
         # una exposición por (día, activo): la última registrada ese día
         exp = (group.sort_values("ts").groupby(["date", "asset"])["exposure"]
                .last().unstack().sort_index())

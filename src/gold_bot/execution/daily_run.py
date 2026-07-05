@@ -163,6 +163,16 @@ def run_shadow_multi() -> None:
         full[key] = book_exp * gate * weight * lev * brake
     top10 = top_cells_exposures(result["books"])
 
+    # señal de CADA célula (activo × estrategia), incluido el libro del
+    # oro completo: la validación individual de todas las estrategias
+    # hacia delante — en 3 meses sabremos cuáles funcionan de verdad
+    cells: list[tuple[str, str, float]] = []
+    for asset, book in result["books"].items():
+        for strat_name, positions in book.positions.items():
+            pos = positions.dropna()
+            last = float(pos.iloc[-1]) if len(pos) else 0.0
+            cells.append((f"cell_{strat_name}", asset, last))
+
     conn = connect()
     try:
         for book_name, exposures in (("multi_full", full), ("top10", top10)):
@@ -171,6 +181,11 @@ def run_shadow_multi() -> None:
                     "INSERT OR REPLACE INTO shadow_signals "
                     "(ts, book, asset, exposure) VALUES (?, ?, ?, ?)",
                     (ts, book_name, asset, exposure))
+        for book_name, asset, exposure in cells:
+            conn.execute(
+                "INSERT OR REPLACE INTO shadow_signals "
+                "(ts, book, asset, exposure) VALUES (?, ?, ?, ?)",
+                (ts, book_name, asset, exposure))
         conn.commit()
     finally:
         conn.close()
@@ -182,9 +197,12 @@ def run_shadow_multi() -> None:
     send_telegram(
         "<b>🌐 libros sombra (sin órdenes)</b>\n"
         "<b>multi completo:</b>\n" + fmt(full) +
-        "\n\n<b>selección top10:</b>\n" + fmt(top10)
+        "\n\n<b>selección top10:</b>\n" + fmt(top10) +
+        f"\n\n<i>{len(cells)} células estrategia×activo registradas "
+        f"para validación individual</i>"
     )
-    log.info("sombra_registrada", full=len(full), top10=len(top10))
+    log.info("sombra_registrada", full=len(full), top10=len(top10),
+             celulas=len(cells))
 
 
 def main() -> None:
